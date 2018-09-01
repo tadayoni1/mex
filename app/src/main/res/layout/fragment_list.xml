@@ -25,9 +25,10 @@
         >
 
         <android.support.v7.widget.RecyclerView
+            android:id="@+id/venues_rv"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-             />
+            />
 
         <com.getbase.floatingactionbutton.FloatingActionsMenu
             android:id="@+id/main_fab"
@@ -48,6 +49,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 fab:fab_colorNormal="@color/white"
+                android:onClick="onAddNewVenueClick"
                 fab:fab_size="mini"
                 fab:fab_title="@string/add_new_restaurant"
                 fab:fab_colorPressed="@color/white_pressed"/>
@@ -56,6 +58,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 fab:fab_colorNormal="@color/white"
+                android:onClick="onAddNewEntryClick"
                 fab:fab_size="mini"
                 fab:fab_title="@string/add_new_entry"
                 fab:fab_colorPressed="@color/white_pressed"/>
