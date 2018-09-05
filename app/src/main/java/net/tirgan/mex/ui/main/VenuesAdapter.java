@@ -7,6 +7,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.GridView;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.RatingBar;
 import android.widget.TextView;
@@ -25,7 +26,8 @@ import net.tirgan.mex.model.Venue;
 
 import java.util.ArrayList;
 
-public class VenuesAdapter extends RecyclerView.Adapter<VenuesAdapter.VenuesAdapterViewHolder> {
+public class VenuesAdapter
+        extends RecyclerView.Adapter<VenuesAdapter.VenuesAdapterViewHolder> {
 
 
     private final Context mContext;
@@ -108,11 +110,11 @@ public class VenuesAdapter extends RecyclerView.Adapter<VenuesAdapter.VenuesAdap
                     }
                 }
                 if (mexEntriesKeys != null) {
-                    holder.mVenueGridView.setAdapter(new EntriesAdapter(mContext, mexEntriesKeys));
-                    holder.mVenueGridView.setVisibility(View.VISIBLE);
+                    holder.mVenueGridView.setAdapter(new EntriesAdapter(mContext, mexEntriesKeys, mKeys.get(position)));
+//                    holder.mVenueGridView.setVisibility(View.VISIBLE);
                 } else {
                     holder.mVenueGridView.setAdapter(null);
-                    holder.mVenueGridView.setVisibility(View.GONE);
+//                    holder.mVenueGridView.setVisibility(View.GONE);
                 }
             }
 
@@ -141,6 +143,7 @@ public class VenuesAdapter extends RecyclerView.Adapter<VenuesAdapter.VenuesAdap
         public final TextView mVenueTextView;
         public final RatingBar mVenueRatingBar;
         public final GridView mVenueGridView;
+        public final ImageButton mVenueExpandImageButton;
 
         public VenuesAdapterViewHolder(View itemView) {
             super(itemView);
@@ -148,6 +151,18 @@ public class VenuesAdapter extends RecyclerView.Adapter<VenuesAdapter.VenuesAdap
             mVenueTextView = itemView.findViewById(R.id.venue_lv_tv);
             mVenueRatingBar = itemView.findViewById(R.id.venue_lv_rb);
             mVenueGridView = itemView.findViewById(R.id.venue_entries_gv);
+            mVenueExpandImageButton = itemView.findViewById(R.id.expand_btn);
+
+            mVenueExpandImageButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (mVenueGridView.getVisibility() == View.VISIBLE) {
+                        mVenueGridView.setVisibility(View.GONE);
+                    } else {
+                        mVenueGridView.setVisibility(View.VISIBLE);
+                    }
+                }
+            });
 
             mVenueImageView.setOnClickListener(this);
         }

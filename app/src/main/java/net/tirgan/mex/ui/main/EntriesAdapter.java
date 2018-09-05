@@ -1,6 +1,7 @@
 package net.tirgan.mex.ui.main;
 
 import android.content.Context;
+import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.view.LayoutInflater;
@@ -21,26 +22,43 @@ import com.squareup.picasso.Picasso;
 
 import net.tirgan.mex.R;
 import net.tirgan.mex.model.MexEntry;
+import net.tirgan.mex.ui.detail.DetailActivity;
 
 import java.util.List;
 
-public class EntriesAdapter extends ArrayAdapter<String>{
+public class EntriesAdapter extends ArrayAdapter<String> {
 
-    public EntriesAdapter(@NonNull Context context, @NonNull List<String> keys) {
+
+    private Context mContext;
+    private String mVenueKey;
+
+
+    public EntriesAdapter(@NonNull Context context, @NonNull List<String> keys, String aVenueKey) {
         super(context, 0, keys);
+        mContext = context;
+        mVenueKey = aVenueKey;
     }
 
     @NonNull
     @Override
     public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
-        String mexKey = getItem(position);
-        if(convertView == null) {
+        final String mexKey = getItem(position);
+        if (convertView == null) {
             convertView = LayoutInflater.from(getContext()).inflate(R.layout.list_item_mex_entries, parent, false);
         }
 
         final ImageView mMexEntryImageView = convertView.findViewById(R.id.mex_entry_lv_iv);
         final TextView mMexEntryTextView = convertView.findViewById(R.id.mex_entry_lv_tv);
         final RatingBar mMexEntryRatingBar = convertView.findViewById(R.id.mex_entry_lv_rb);
+
+        mMexEntryImageView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(mContext, DetailActivity.class);
+                intent.putExtra(DetailActivity.INTENT_EXTRA_DETAIL_FIREBASE_DATABASE_KEY, mexKey);
+                mContext.startActivity(intent);
+            }
+        });
 
         String userId = FirebaseAuth.getInstance().getUid();
         FirebaseDatabase mexEntryDatabase = FirebaseDatabase.getInstance();
