@@ -1,5 +1,7 @@
 package net.tirgan.mex.model;
 
+import java.util.List;
+
 public class Venues {
 
     private String mFirebaseKey;
@@ -17,6 +19,16 @@ public class Venues {
     public String getVenueName() {
         return mVenueName;
     }
+
+    public static int getPositionOfKey(List<Venues> aVenues, String aFirebaseKey) {
+        for (int i = 0; i < aVenues.size(); i++) {
+            if (aVenues.get(i).getFirebaseKey().equals(aFirebaseKey)) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
 
     @Override
     public String toString() {

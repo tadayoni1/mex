@@ -89,7 +89,11 @@ public class VenuesAdapter
     @Override
     public void onBindViewHolder(@NonNull final VenuesAdapterViewHolder holder, final int position) {
         Venue venue = mVenues.get(position);
-        Picasso.get().load(venue.getImageUri()).into(holder.mVenueImageView);
+        if (venue.getImageUri() != null && !venue.getImageUri().isEmpty()) {
+            Picasso.get()
+                    .load(venue.getImageUri())
+                    .into(holder.mVenueImageView);
+        }
         holder.mVenueTextView.setText(venue.getName());
         holder.mVenueRatingBar.setRating(venue.getRating());
 

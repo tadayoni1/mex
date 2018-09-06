@@ -8,16 +8,33 @@
     tools:context=".ui.detail.DetailActivity"
     tools:showIn="@layout/activity_detail">
 
-    <ImageView
-        android:id="@+id/detail_iv"
+    <FrameLayout
+        android:id="@+id/detail_fl"
         android:layout_width="match_parent"
-        android:layout_height="250dp"
-        android:scaleType="centerCrop"
-        android:contentDescription="@string/detail_image_cd"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:src="@drawable/noodle" />
+        android:layout_height="250dp">
+
+        <ImageView
+            android:id="@+id/detail_iv"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:contentDescription="@string/detail_image_cd"
+            android:scaleType="centerCrop"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:src="@drawable/noodle" />
+
+        <ImageButton
+            android:layout_width="36dp"
+            android:layout_height="32dp"
+            android:scaleType="fitXY"
+            android:background="@color/camera_image_button_background"
+            android:layout_gravity="bottom|end"
+            android:layout_margin="12dp"
+            android:onClick="onAddNewPhotoMexEntry"
+            android:src="@drawable/camera"/>
+
+    </FrameLayout>
 
     <RatingBar
         android:id="@+id/detail_rb"
@@ -30,23 +47,32 @@
         android:layout_marginTop="8dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/detail_iv" />
+        app:layout_constraintTop_toBottomOf="@+id/detail_fl" />
 
     <EditText
         android:id="@+id/detail_et"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="8dp"
-        android:layout_marginLeft="8dp"
-        android:layout_marginRight="8dp"
-        android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         android:ems="10"
         android:inputType="text"
-        android:text="@string/detail_enter_name"
+        android:hint="@string/detail_enter_name"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/detail_rb" />
+
+    <EditText
+        android:id="@+id/detail_price_et"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:ems="6"
+        android:inputType="number"
+        android:hint="@string/detail_enter_price"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/detail_et"
+        />
 
     <android.support.v7.widget.AppCompatSpinner
         android:id="@+id/detail_venue_spinner"
@@ -55,6 +81,6 @@
         android:layout_marginTop="8dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/detail_et" />
+        app:layout_constraintTop_toBottomOf="@+id/detail_price_et" />
 
 </android.support.constraint.ConstraintLayout>

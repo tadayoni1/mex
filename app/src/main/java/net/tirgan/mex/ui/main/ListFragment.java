@@ -85,4 +85,10 @@ public class ListFragment
         startActivity(intent);
 
     }
+
+    public void reloadData() {
+        if (mVenuesAdapter != null) {
+            mVenuesAdapter.reloadData();
+        }
+    }
 }
