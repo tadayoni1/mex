@@ -218,7 +218,7 @@ public class VenueActivity extends AppCompatActivity {
                 break;
             case PICK_MAP_POINT_REQUEST:
                 if (resultCode == RESULT_OK) {
-                    LatLng latLng = data.getParcelableExtra("picked_point");
+                    LatLng latLng = data.getParcelableExtra(MapsActivity.RETURN_INTENT_EXTRA_PICKED_POINT);
                     mVenue.setLat(latLng.latitude);
                     mVenue.setLon(latLng.longitude);
                     mVenuesDatabaseReference.setValue(mVenue);

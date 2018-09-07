@@ -1,17 +1,22 @@
 package net.tirgan.mex.ui.detail;
 
 import android.Manifest;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -77,6 +82,7 @@ public class DetailActivity extends AppCompatActivity {
 
 
     private MexEntry mMexEntry;
+    private String mKey;
 
 
     @Override
@@ -87,9 +93,9 @@ public class DetailActivity extends AppCompatActivity {
         ButterKnife.bind(this);
 
         Intent intentThatStartedThisActivity = getIntent();
-        String key = intentThatStartedThisActivity.getStringExtra(INTENT_EXTRA_DETAIL_FIREBASE_DATABASE_KEY);
+        mKey = intentThatStartedThisActivity.getStringExtra(INTENT_EXTRA_DETAIL_FIREBASE_DATABASE_KEY);
 
-        initializeFirebase(key);
+        initializeFirebase();
 
         initializeMexEntryDetails();
         initializeVenuesSpinner();
@@ -146,16 +152,47 @@ public class DetailActivity extends AppCompatActivity {
                 mDetailDatabaseReference.setValue(mMexEntry);
             }
         });
-
-
     }
 
-    private void initializeFirebase(String aKey) {
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        menu.add(0, 0, 0, getString(R.string.menu_item_delete)).setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        AlertDialog.Builder builder;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            builder = new AlertDialog.Builder(this, android.R.style.Theme_Material_Dialog_Alert);
+        } else {
+            builder = new AlertDialog.Builder(this);
+        }
+        builder.setTitle(getString(R.string.delete_entry_dialog_title))
+                .setMessage(getString(R.string.delete_entry_dialog_message))
+                .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        FirebaseStorage.getInstance().getReferenceFromUrl(mMexEntry.getImageUrl()).delete();
+                        mDetailDatabaseReference.removeValue();
+                        finish();
+                    }
+                })
+                .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        // do nothing
+                    }
+                })
+                .setIcon(android.R.drawable.ic_dialog_alert)
+                .show();
+        return true;
+    }
+
+    private void initializeFirebase() {
         mDetailDatabase = FirebaseDatabase.getInstance();
         mFirebaseStorage = FirebaseStorage.getInstance();
 
         String userId = FirebaseAuth.getInstance().getUid();
-        mDetailDatabaseReference = mDetailDatabase.getReference().child(getString(R.string.users_database)).child(userId).child(getString(R.string.entries_database)).child(aKey);
+        mDetailDatabaseReference = mDetailDatabase.getReference().child(getString(R.string.users_database)).child(userId).child(getString(R.string.entries_database)).child(mKey);
         mVenuesDatabaseReference = mDetailDatabase.getReference().child(getString(R.string.users_database)).child(userId).child(getString(R.string.venues_database));
 
         mStorageReference = mFirebaseStorage.getReference().child(getString(R.string.users_database)).child(userId).child(getString(R.string.entries_database));

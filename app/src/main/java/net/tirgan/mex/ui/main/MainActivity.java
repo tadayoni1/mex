@@ -3,9 +3,13 @@ package net.tirgan.mex.ui.main;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
@@ -40,7 +44,7 @@ import butterknife.ButterKnife;
 
 public class MainActivity
         extends AppCompatActivity
-        implements ListFragment.ListFragmentOnClickHandler, OnMapReadyCallback {
+        implements ListFragment.ListFragmentOnClickHandler, OnMapReadyCallback, GoogleMap.OnMyLocationButtonClickListener, GoogleMap.OnMyLocationClickListener {
 
 
     private static final int RC_SIGN_IN = 1;
@@ -84,6 +88,35 @@ public class MainActivity
     };
 
 
+    private static final long LOCATION_REFRESH_TIME = 60000;
+    private static final float LOCATION_REFRESH_DISTANCE = 10.0f;
+    private LocationManager mLocationManager;
+    private final LocationListener mLocationListener = new LocationListener() {
+        @Override
+        public void onLocationChanged(Location location) {
+            if (mGoogleMap != null) {
+                LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
+                mGoogleMap.animateCamera(CameraUpdateFactory.newLatLng(latLng));
+            }
+        }
+
+        @Override
+        public void onStatusChanged(String provider, int status, Bundle extras) {
+
+        }
+
+        @Override
+        public void onProviderEnabled(String provider) {
+
+        }
+
+        @Override
+        public void onProviderDisabled(String provider) {
+
+        }
+    };
+
+
 //    private void dispatchTakePictureIntent(int aPermissionRequestId) {
 //        if (MiscUtils.checkPermissionsAndRequest(new String[]{Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE}, aPermissionRequestId, this)) {
 //            Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
@@ -114,12 +147,19 @@ public class MainActivity
         mFragmentManager = getSupportFragmentManager();
 
         mListFragment = new ListFragment();
-        mMapFragment = SupportMapFragment.newInstance();
-        mMapFragment.getMapAsync(this);
 
-        mFragmentManager.beginTransaction()
-                .add(R.id.list_container, mListFragment)
-                .commit();
+        mLocationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, LOCATION_REFRESH_TIME,
+                    LOCATION_REFRESH_DISTANCE, mLocationListener);
+        }
+
+        if (savedInstanceState == null) {
+            mFragmentManager.beginTransaction()
+                    .add(R.id.list_container, mListFragment)
+                    .commit();
+        }
 
 
         mAuthStateListener = new FirebaseAuth.AuthStateListener() {
@@ -152,6 +192,8 @@ public class MainActivity
     }
 
     private void loadMapsFragment() {
+        mMapFragment = SupportMapFragment.newInstance();
+        mMapFragment.getMapAsync(this);
         mFragmentManager.beginTransaction()
                 .replace(R.id.list_container, mMapFragment)
                 .commit();
@@ -324,7 +366,7 @@ public class MainActivity
                     for (DataSnapshot dataSnapshot : aDataSnapshot.getChildren()) {
                         Venue venue = dataSnapshot.getValue(Venue.class);
                         LatLng latLng = new LatLng(venue.getLat(), venue.getLon());
-                        mGoogleMap.addMarker(new MarkerOptions().position(latLng));
+                        mGoogleMap.addMarker(new MarkerOptions().position(latLng).title(venue.getName()));
                     }
                 }
 
@@ -334,17 +376,32 @@ public class MainActivity
                 }
             });
 
-            LatLng currentLocation = MiscUtils.getLocation(this);
-            if (currentLocation != null) {
-                mGoogleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 15));
-            }
+//            LatLng currentLocation = MiscUtils.getLocation(this);
+//            if (currentLocation != null) {
+//                mGoogleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 15));
+//            }
         }
     }
 
     @Override
     public void onMapReady(GoogleMap aGoogleMap) {
         mGoogleMap = aGoogleMap;
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                || ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            mGoogleMap.setMyLocationEnabled(true);
+        }
+        mGoogleMap.setOnMyLocationButtonClickListener(this);
+        mGoogleMap.setOnMyLocationClickListener(this);
         setLocation();
     }
 
+    @Override
+    public boolean onMyLocationButtonClick() {
+        return false;
+    }
+
+    @Override
+    public void onMyLocationClick(@NonNull Location aLocation) {
+
+    }
 }

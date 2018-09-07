@@ -32,7 +32,8 @@
             android:background="@color/camera_image_button_background"
             android:onClick="onAddNewPhotoVenue"
             android:scaleType="fitXY"
-            android:src="@drawable/camera" />
+            android:src="@drawable/camera"
+            android:contentDescription="@string/add_venue_photo" />
     </FrameLayout>
 
     <RatingBar
@@ -75,6 +76,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/venue_et"
-        />
+        android:contentDescription="@string/add_location" />
 
 </android.support.constraint.ConstraintLayout>
