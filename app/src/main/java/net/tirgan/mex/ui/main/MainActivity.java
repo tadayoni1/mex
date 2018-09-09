@@ -12,6 +12,7 @@ import android.support.design.widget.BottomNavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
@@ -34,8 +35,10 @@ import net.tirgan.mex.R;
 import net.tirgan.mex.model.MexEntry;
 import net.tirgan.mex.model.Venue;
 import net.tirgan.mex.ui.detail.DetailActivity;
+import net.tirgan.mex.ui.settings.SettingsActivity;
 import net.tirgan.mex.ui.venue.VenueActivity;
 import net.tirgan.mex.utilities.MiscUtils;
+import net.tirgan.mex.utilities.SettingsUtil;
 
 import java.util.Arrays;
 
@@ -182,7 +185,26 @@ public class MainActivity
                 }
             }
         };
+//        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+//        Boolean isNotificationEnabled = sharedPreferences.getBoolean(getString(R.string.settings_enable_notifications), false);
+    }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        menu.add(0, SettingsUtil.MENU_ITEM_SETTINGS, SettingsUtil.MENU_ITEM_SETTINGS, getString(R.string.menu_item_settings)).setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int itemId = item.getItemId();
+        switch (itemId) {
+            case SettingsUtil.MENU_ITEM_SETTINGS:
+                Intent intent = new Intent(this, SettingsActivity.class);
+                startActivity(intent);
+                break;
+        }
+        return true;
     }
 
     private void loadListFragment() {
@@ -299,7 +321,7 @@ public class MainActivity
 
     public void onAddNewVenueClick(View view) {
 //        dispatchTakePictureIntent(RC_IMAGE_CAPTURE_VENUE);
-        Venue venue = new Venue("", "", 0, 0, 0);
+        Venue venue = new Venue("", "", 2.5f, 0, 0);
         String key = mDatabaseReference.child(getString(R.string.venues_database)).push().getKey();
         mDatabaseReference.child(getString(R.string.venues_database)).child(key).setValue(venue);
         startVenueActivity(key);

@@ -1,17 +1,22 @@
 package net.tirgan.mex.ui.venue;
 
 import android.Manifest;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -33,8 +38,11 @@ import com.google.firebase.storage.UploadTask;
 import com.squareup.picasso.Picasso;
 
 import net.tirgan.mex.R;
+import net.tirgan.mex.model.MexEntry;
 import net.tirgan.mex.model.Venue;
+import net.tirgan.mex.ui.settings.SettingsActivity;
 import net.tirgan.mex.utilities.MiscUtils;
+import net.tirgan.mex.utilities.SettingsUtil;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -109,6 +117,71 @@ public class VenueActivity extends AppCompatActivity {
             }
         });
     }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        menu.add(0, SettingsUtil.MENU_ITEM_SHARE, SettingsUtil.MENU_ITEM_SHARE, getString(R.string.menu_item_share)).setIcon(android.R.drawable.ic_menu_share).setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
+        menu.add(0, SettingsUtil.MENU_ITEM_DELETE, SettingsUtil.MENU_ITEM_DELETE, getString(R.string.menu_item_delete)).setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER);
+        menu.add(0, SettingsUtil.MENU_ITEM_SETTINGS, SettingsUtil.MENU_ITEM_SETTINGS, getString(R.string.menu_item_settings)).setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int itemId = item.getItemId();
+        switch (itemId) {
+            case SettingsUtil.MENU_ITEM_DELETE:
+                AlertDialog.Builder builder;
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    builder = new AlertDialog.Builder(this, android.R.style.Theme_Material_Dialog_Alert);
+                } else {
+                    builder = new AlertDialog.Builder(this);
+                }
+                builder.setTitle(getString(R.string.delete_venue_title))
+                        .setMessage(getString(R.string.delete_venue_dialog_message))
+                        .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+                                final String venueKey = mVenuesDatabaseReference.getKey();
+                                String userId = FirebaseAuth.getInstance().getUid();
+                                final DatabaseReference entriesDatabaseReference = FirebaseDatabase.getInstance()
+                                        .getReference().child(getString(R.string.users_database)).child(userId).child(getString(R.string.entries_database));
+                                entriesDatabaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
+                                    @Override
+                                    public void onDataChange(@NonNull DataSnapshot aDataSnapshot) {
+                                        for (DataSnapshot dataSnapshot : aDataSnapshot.getChildren()) {
+                                            MexEntry mexEntry = dataSnapshot.getValue(MexEntry.class);
+                                            if (mexEntry.getVenueKey().equals(venueKey)) {
+                                                StorageReference entriesStorageReference = mFirebaseStorage.getReferenceFromUrl(mexEntry.getImageUrl());
+                                                entriesStorageReference.delete();
+                                                entriesDatabaseReference.child(dataSnapshot.getKey()).removeValue();
+                                            }
+                                        }
+                                        finish();
+                                    }
+
+                                    @Override
+                                    public void onCancelled(@NonNull DatabaseError aDatabaseError) {
+
+                                    }
+                                });
+                            }
+                        })
+                        .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+                                // do nothing
+                            }
+                        })
+                        .setIcon(android.R.drawable.ic_dialog_alert)
+                        .show();
+                break;
+            case SettingsUtil.MENU_ITEM_SETTINGS:
+                Intent intent = new Intent(this, SettingsActivity.class);
+                startActivity(intent);
+                break;
+        }
+        return true;
+    }
+
 
     private void initializeFirebase(String aKey) {
         mFirebaseStorage = FirebaseStorage.getInstance();
