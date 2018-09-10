@@ -1,8 +1,6 @@
 package net.tirgan.mex.ui.main;
 
-import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -17,7 +15,6 @@ import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
 
 import net.tirgan.mex.R;
-import net.tirgan.mex.ui.venue.VenueActivity;
 
 public class ListFragment
         extends Fragment
@@ -79,10 +76,10 @@ public class ListFragment
 
     @Override
     public void onVenueImageClick(String key) {
-//        mClickHandler.onVenueImageClick(key);
-        Intent intent = new Intent((Activity) mClickHandler, VenueActivity.class);
-        intent.putExtra(VenueActivity.INTENT_EXTRA_FIREBASE_DATABASE_KEY, key);
-        startActivity(intent);
+       mClickHandler.onVenueImageClick(key);
+//        Intent intent = new Intent((Activity) mClickHandler, VenueActivity.class);
+//        intent.putExtra(VenueActivity.INTENT_EXTRA_FIREBASE_DATABASE_KEY, key);
+//        startActivity(intent);
 
     }
 

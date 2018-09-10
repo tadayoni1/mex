@@ -2,6 +2,8 @@
   <dictionary name="Pedram">
     <words>
       <w>firebase</w>
+      <w>geofence</w>
+      <w>geofencing</w>
     </words>
   </dictionary>
 </component>

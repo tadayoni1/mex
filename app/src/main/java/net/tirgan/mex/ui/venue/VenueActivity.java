@@ -1,6 +1,7 @@
 package net.tirgan.mex.ui.venue;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -50,6 +51,7 @@ import butterknife.ButterKnife;
 public class VenueActivity extends AppCompatActivity {
 
     public static final String INTENT_EXTRA_FIREBASE_DATABASE_KEY = "intent-extra-firebase-database-key";
+    public static final String RETURN_INTENT_EXTRA_IS_LOCATION_CHANGED = "return-intent-extra-is-location-changed";
 
     private static final int RC_IMAGE_CAPTURE_VENUE = 2;
 
@@ -72,6 +74,8 @@ public class VenueActivity extends AppCompatActivity {
     private StorageReference mStorageReference;
 
     private Venue mVenue;
+    private boolean isLocationChanged = false;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -117,6 +121,19 @@ public class VenueActivity extends AppCompatActivity {
             }
         });
     }
+
+    @Override
+    protected void onStop() {
+        Intent returnIntent = new Intent();
+        if (isLocationChanged) {
+            returnIntent.putExtra(RETURN_INTENT_EXTRA_IS_LOCATION_CHANGED, true);
+        } else {
+            returnIntent.putExtra(RETURN_INTENT_EXTRA_IS_LOCATION_CHANGED, false);
+        }
+        setResult(Activity.RESULT_OK, returnIntent);
+        super.onStop();
+    }
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -302,5 +319,6 @@ public class VenueActivity extends AppCompatActivity {
     public void onPickLocationFromMap(View view) {
         Intent pickPointIntent = new Intent(this, MapsActivity.class);
         startActivityForResult(pickPointIntent, PICK_MAP_POINT_REQUEST);
+        isLocationChanged = true;
     }
 }

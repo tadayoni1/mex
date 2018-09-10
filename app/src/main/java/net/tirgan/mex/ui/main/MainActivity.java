@@ -1,12 +1,14 @@
 package net.tirgan.mex.ui.main;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
 import android.support.v4.app.ActivityCompat;
@@ -17,6 +19,7 @@ import android.view.MenuItem;
 import android.view.View;
 
 import com.firebase.ui.auth.AuthUI;
+import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -32,11 +35,13 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import net.tirgan.mex.R;
+import net.tirgan.mex.geofencing.Geofencing;
 import net.tirgan.mex.model.MexEntry;
 import net.tirgan.mex.model.Venue;
 import net.tirgan.mex.ui.detail.DetailActivity;
 import net.tirgan.mex.ui.settings.SettingsActivity;
 import net.tirgan.mex.ui.venue.VenueActivity;
+import net.tirgan.mex.utilities.JobSchedulingUtils;
 import net.tirgan.mex.utilities.MiscUtils;
 import net.tirgan.mex.utilities.SettingsUtil;
 
@@ -47,13 +52,15 @@ import butterknife.ButterKnife;
 
 public class MainActivity
         extends AppCompatActivity
-        implements ListFragment.ListFragmentOnClickHandler, OnMapReadyCallback, GoogleMap.OnMyLocationButtonClickListener, GoogleMap.OnMyLocationClickListener {
+        implements ListFragment.ListFragmentOnClickHandler, OnMapReadyCallback,
+        GoogleMap.OnMyLocationButtonClickListener, GoogleMap.OnMyLocationClickListener {
 
 
     private static final int RC_SIGN_IN = 1;
     private static final int RC_IMAGE_CAPTURE_VENUE = 2;
     private static final int RC_IMAGE_CAPTURE_MEX_ENTRY = 3;
     private static final int RC_LOCATION = 4;
+    private static final int RC_VENUE = 5;
 
     private FragmentManager mFragmentManager;
     private ListFragment mListFragment;
@@ -62,6 +69,9 @@ public class MainActivity
     @BindView(R.id.navigation)
     BottomNavigationView mBottomNavigationView;
 
+    private boolean mIsEnabled;
+    private GoogleApiClient mClient;
+    private Geofencing mGeofencing;
 
     private FirebaseAuth mFirebaseAuth;
     private FirebaseAuth.AuthStateListener mAuthStateListener;
@@ -137,6 +147,13 @@ public class MainActivity
 
         ButterKnife.bind(this);
 
+        mIsEnabled = PreferenceManager.getDefaultSharedPreferences(this).getBoolean(getString(R.string.settings_enable_notifications), false);
+
+        if (mIsEnabled) {
+            mGeofencing = new Geofencing(this);
+            JobSchedulingUtils.scheduleGeofencingRegister(this);
+        }
+
         mFirebaseAuth = FirebaseAuth.getInstance();
 //        mFirebaseStorage = FirebaseStorage.getInstance();
         mDatabase = FirebaseDatabase.getInstance();
@@ -153,7 +170,7 @@ public class MainActivity
 
         mLocationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
 
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, LOCATION_REFRESH_TIME,
                     LOCATION_REFRESH_DISTANCE, mLocationListener);
         }
@@ -185,6 +202,7 @@ public class MainActivity
                 }
             }
         };
+
 //        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 //        Boolean isNotificationEnabled = sharedPreferences.getBoolean(getString(R.string.settings_enable_notifications), false);
     }
@@ -301,7 +319,17 @@ public class MainActivity
 ////                    mDatabaseReference.child(getString(R.string.entries_database)).push().setValue(entry);
 //                }
 //
-//                break;
+                break;
+            case RC_VENUE:
+                if (resultCode == Activity.RESULT_OK) {
+                    Boolean result = data.getBooleanExtra(VenueActivity.RETURN_INTENT_EXTRA_IS_LOCATION_CHANGED, false);
+                    if (result) {
+                        if (mGeofencing != null) {
+                            mGeofencing.updateGeofenceListAndRegisterAll();
+                        }
+                    }
+                }
+                break;
         }
 
     }
@@ -320,7 +348,6 @@ public class MainActivity
     }
 
     public void onAddNewVenueClick(View view) {
-//        dispatchTakePictureIntent(RC_IMAGE_CAPTURE_VENUE);
         Venue venue = new Venue("", "", 2.5f, 0, 0);
         String key = mDatabaseReference.child(getString(R.string.venues_database)).push().getKey();
         mDatabaseReference.child(getString(R.string.venues_database)).child(key).setValue(venue);
@@ -329,7 +356,6 @@ public class MainActivity
     }
 
     public void onAddNewEntryClick(View view) {
-//        dispatchTakePictureIntent(RC_IMAGE_CAPTURE_MEX_ENTRY);
         MexEntry mexEntry = new MexEntry("", "", 2.5f, 10.00f, "");
         String key = mDatabaseReference.child(getString(R.string.entries_database)).push().getKey();
         mDatabaseReference.child(getString(R.string.entries_database)).child(key).setValue(mexEntry);
@@ -365,7 +391,11 @@ public class MainActivity
     private void startVenueActivity(String key) {
         Intent intent = new Intent(MainActivity.this, VenueActivity.class);
         intent.putExtra(VenueActivity.INTENT_EXTRA_FIREBASE_DATABASE_KEY, key);
-        startActivity(intent);
+        if (mIsEnabled) {
+            startActivityForResult(intent, RC_VENUE);
+        } else {
+            startActivity(intent);
+        }
     }
 
     private void startDetailActivity(String key) {
@@ -374,9 +404,10 @@ public class MainActivity
         startActivity(intent);
     }
 
+
     @Override
     public void onVenueImageClick(String key) {
-
+        startVenueActivity(key);
     }
 
     private void setLocation() {
@@ -426,4 +457,5 @@ public class MainActivity
     public void onMyLocationClick(@NonNull Location aLocation) {
 
     }
+
 }
