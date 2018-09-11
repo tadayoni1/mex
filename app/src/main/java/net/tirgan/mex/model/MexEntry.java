@@ -7,16 +7,18 @@ public class MexEntry {
     private float mRating;
     private float mPrice;
     private String mImageUrl;
+    private long mDate;
 
     public MexEntry() {
     }
 
-    public MexEntry(String aVenueKey, String aName, float aRating, float aPrice, String aImageUrl) {
+    public MexEntry(String aVenueKey, String aName, float aRating, float aPrice, String aImageUrl, long aDate) {
         mVenueKey = aVenueKey;
         mName = aName;
         mRating = aRating;
         mPrice = aPrice;
         mImageUrl = aImageUrl;
+        mDate = aDate;
     }
 
     public String getVenueKey() {
@@ -57,5 +59,13 @@ public class MexEntry {
 
     public void setImageUrl(String aImageUrl) {
         mImageUrl = aImageUrl;
+    }
+
+    public long getDate() {
+        return mDate;
+    }
+
+    public void setDate(long aDate) {
+        mDate = aDate;
     }
 }

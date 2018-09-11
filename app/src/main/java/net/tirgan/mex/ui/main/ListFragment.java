@@ -7,6 +7,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.SearchView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,6 +24,7 @@ public class ListFragment
 
     private RecyclerView mRecyclerView;
     private VenuesAdapter mVenuesAdapter;
+    private SearchView mSearchView;
 
     private ListFragmentOnClickHandler mClickHandler;
 
@@ -55,12 +57,15 @@ public class ListFragment
         AdRequest adRequest = new AdRequest.Builder().build();
         adView.loadAd(adRequest);
 
+        mSearchView = rootView.findViewById(R.id.fragment_list_sv);
+
         mRecyclerView = rootView.findViewById(R.id.venues_rv);
         LinearLayoutManager layoutManager = new LinearLayoutManager(getContext());
         mRecyclerView.setLayoutManager(layoutManager);
         mVenuesAdapter = new VenuesAdapter(getContext(), this);
         mRecyclerView.setAdapter(mVenuesAdapter);
         mVenuesAdapter.reloadData();
+
 
 
         return rootView;

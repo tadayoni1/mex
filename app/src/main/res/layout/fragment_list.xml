@@ -7,8 +7,8 @@
     android:layout_height="match_parent"
     xmlns:fab="http://schemas.android.com/apk/res-auto">
 
-    <SearchView
-        android:id="@+id/list_sv"
+    <android.support.v7.widget.SearchView
+        android:id="@+id/fragment_list_sv"
         android:layout_width="match_parent"
         android:layout_height="50dp"
         app:layout_constraintEnd_toEndOf="parent"
@@ -21,7 +21,7 @@
         app:layout_constraintBottom_toTopOf="@+id/list_av"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/list_sv"
+        app:layout_constraintTop_toBottomOf="@+id/fragment_list_sv"
         >
 
         <android.support.v7.widget.RecyclerView
@@ -35,12 +35,11 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="end|bottom"
-            android:layout_marginLeft="16dp"
-            android:layout_marginStart="16dp"
-            fab:fab_addButtonColorNormal="@color/white"
-            fab:fab_addButtonColorPressed="@color/white_pressed"
-            fab:fab_addButtonPlusIconColor="@color/half_black"
-            fab:fab_addButtonSize="normal"
+            android:layout_margin="16dp"
+            fab:fab_addButtonColorNormal="@color/colorAccent"
+            fab:fab_addButtonColorPressed="@color/colorAccentPressed"
+            fab:fab_addButtonPlusIconColor="@color/white"
+            fab:fab_addButtonSize="mini"
             fab:fab_title="@string/take_photo"
             fab:fab_labelStyle="@style/menu_labels_style"
             fab:fab_labelsPosition="left">
@@ -48,20 +47,22 @@
             <com.getbase.floatingactionbutton.FloatingActionButton
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                fab:fab_colorNormal="@color/white"
+                fab:fab_colorNormal="@color/colorAccent"
                 android:onClick="onAddNewVenueClick"
+                app:fab_icon="@drawable/silverware_fork_knife"
                 fab:fab_size="mini"
                 fab:fab_title="@string/add_new_restaurant"
-                fab:fab_colorPressed="@color/white_pressed"/>
+                fab:fab_colorPressed="@color/colorAccentPressed"/>
 
             <com.getbase.floatingactionbutton.FloatingActionButton
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                fab:fab_colorNormal="@color/white"
+                fab:fab_colorNormal="@color/colorAccent"
                 android:onClick="onAddNewEntryClick"
+                app:fab_icon="@drawable/food_apple"
                 fab:fab_size="mini"
                 fab:fab_title="@string/add_new_entry"
-                fab:fab_colorPressed="@color/white_pressed"/>
+                fab:fab_colorPressed="@color/colorAccentPressed"/>
 
         </com.getbase.floatingactionbutton.FloatingActionsMenu>
     </FrameLayout>

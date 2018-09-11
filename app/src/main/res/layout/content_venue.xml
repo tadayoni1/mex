@@ -32,7 +32,7 @@
             android:background="@color/camera_image_button_background"
             android:onClick="onAddNewPhotoVenue"
             android:scaleType="fitXY"
-            android:src="@drawable/camera"
+            app:srcCompat="@drawable/camera"
             android:contentDescription="@string/add_venue_photo" />
     </FrameLayout>
 
@@ -67,7 +67,7 @@
 
     <ImageButton
         android:id="@+id/location_ib"
-        android:src="@drawable/map_marker_plus"
+        app:srcCompat="@drawable/map_marker_plus"
         android:background="@color/fui_transparent"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

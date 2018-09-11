@@ -41,11 +41,13 @@ import net.tirgan.mex.model.Venue;
 import net.tirgan.mex.ui.detail.DetailActivity;
 import net.tirgan.mex.ui.settings.SettingsActivity;
 import net.tirgan.mex.ui.venue.VenueActivity;
+import net.tirgan.mex.utilities.FirebaseUtils;
 import net.tirgan.mex.utilities.JobSchedulingUtils;
 import net.tirgan.mex.utilities.MiscUtils;
 import net.tirgan.mex.utilities.SettingsUtil;
 
 import java.util.Arrays;
+import java.util.Date;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -157,6 +159,11 @@ public class MainActivity
         mFirebaseAuth = FirebaseAuth.getInstance();
 //        mFirebaseStorage = FirebaseStorage.getInstance();
         mDatabase = FirebaseDatabase.getInstance();
+
+        if (savedInstanceState == null) {
+            // Enable Disk Persistence
+            mDatabase.setPersistenceEnabled(true);
+        }
 
         String userId = mFirebaseAuth.getUid();
 //        mStorageReference = mFirebaseStorage.getReference().child(getString(R.string.users_database)).child(userId);
@@ -348,7 +355,7 @@ public class MainActivity
     }
 
     public void onAddNewVenueClick(View view) {
-        Venue venue = new Venue("", "", 2.5f, 0, 0);
+        Venue venue = new Venue("", FirebaseUtils.VENUE_DEFAULT_IMAGE_DOWNLOAD_URL, FirebaseUtils.DEFAULT_RATING, FirebaseUtils.DEFAULT_LATITUDE, FirebaseUtils.DEFAULT_LONGITUDE);
         String key = mDatabaseReference.child(getString(R.string.venues_database)).push().getKey();
         mDatabaseReference.child(getString(R.string.venues_database)).child(key).setValue(venue);
         startVenueActivity(key);
@@ -356,7 +363,7 @@ public class MainActivity
     }
 
     public void onAddNewEntryClick(View view) {
-        MexEntry mexEntry = new MexEntry("", "", 2.5f, 10.00f, "");
+        MexEntry mexEntry = new MexEntry("", "", FirebaseUtils.DEFAULT_RATING, FirebaseUtils.DEFAULT_PRICE, FirebaseUtils.MEX_ENTRY_DEFAULT_IMAGE_DOWNLOAD_URL, new Date().getTime());
         String key = mDatabaseReference.child(getString(R.string.entries_database)).push().getKey();
         mDatabaseReference.child(getString(R.string.entries_database)).child(key).setValue(mexEntry);
         startDetailActivity(key);

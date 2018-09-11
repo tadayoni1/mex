@@ -43,7 +43,7 @@ public class RegisterGeoLocationsFirebaseJobService
                             .addApi(LocationServices.API)
                             .build();
 
-                    mGeofencing = new Geofencing(mClient, context);
+                    mGeofencing = new Geofencing(context);
                     mGeofencing.updateGeofenceListAndRegisterAll();
 
                     return null;

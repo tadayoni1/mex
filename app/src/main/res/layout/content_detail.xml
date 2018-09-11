@@ -32,7 +32,7 @@
             android:layout_gravity="bottom|end"
             android:layout_margin="12dp"
             android:onClick="onAddNewPhotoMexEntry"
-            android:src="@drawable/camera"/>
+            app:srcCompat="@drawable/camera"/>
 
     </FrameLayout>
 
