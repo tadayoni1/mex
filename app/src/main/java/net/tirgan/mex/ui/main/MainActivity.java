@@ -149,43 +149,15 @@ public class MainActivity
 
         ButterKnife.bind(this);
 
-        mIsEnabled = PreferenceManager.getDefaultSharedPreferences(this).getBoolean(getString(R.string.settings_enable_notifications), false);
-
-        if (mIsEnabled) {
-            mGeofencing = new Geofencing(this);
-            JobSchedulingUtils.scheduleGeofencingRegister(this);
-        }
 
         mFirebaseAuth = FirebaseAuth.getInstance();
-//        mFirebaseStorage = FirebaseStorage.getInstance();
-        mDatabase = FirebaseDatabase.getInstance();
 
-        if (savedInstanceState == null) {
-            // Enable Disk Persistence
-            mDatabase.setPersistenceEnabled(true);
+        if (mDatabase == null) {
+            mDatabase = FirebaseDatabase.getInstance();
         }
 
-        String userId = mFirebaseAuth.getUid();
-//        mStorageReference = mFirebaseStorage.getReference().child(getString(R.string.users_database)).child(userId);
-        mDatabaseReference = mDatabase.getReference().child(getString(R.string.users_database)).child(userId);
-
-        mBottomNavigationView.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
-
-        mFragmentManager = getSupportFragmentManager();
-
-        mListFragment = new ListFragment();
-
-        mLocationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
-
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, LOCATION_REFRESH_TIME,
-                    LOCATION_REFRESH_DISTANCE, mLocationListener);
-        }
-
-        if (savedInstanceState == null) {
-            mFragmentManager.beginTransaction()
-                    .add(R.id.list_container, mListFragment)
-                    .commit();
+        if (mFirebaseAuth.getUid() != null) {
+            initializeActivity(savedInstanceState);
         }
 
 
@@ -212,6 +184,37 @@ public class MainActivity
 
 //        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 //        Boolean isNotificationEnabled = sharedPreferences.getBoolean(getString(R.string.settings_enable_notifications), false);
+    }
+
+    private void initializeActivity(Bundle savedInstanceState) {
+        String userId = mFirebaseAuth.getUid();
+        mDatabaseReference = mDatabase.getReference().child(getString(R.string.users_database)).child(userId);
+
+        mIsEnabled = PreferenceManager.getDefaultSharedPreferences(this).getBoolean(getString(R.string.settings_enable_notifications), false);
+
+        if (mIsEnabled) {
+            mGeofencing = new Geofencing(this);
+            JobSchedulingUtils.scheduleGeofencingRegister(this);
+        }
+
+        mBottomNavigationView.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
+
+        mFragmentManager = getSupportFragmentManager();
+
+        mListFragment = new ListFragment();
+
+        mLocationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, LOCATION_REFRESH_TIME,
+                    LOCATION_REFRESH_DISTANCE, mLocationListener);
+        }
+
+        if (savedInstanceState == null) {
+            mFragmentManager.beginTransaction()
+                    .add(R.id.list_container, mListFragment)
+                    .commit();
+        }
     }
 
     @Override
@@ -253,6 +256,8 @@ public class MainActivity
             case RC_SIGN_IN:
                 if (resultCode == RESULT_CANCELED) {
                     finish();
+                } else if (resultCode == RESULT_OK) {
+                    initializeActivity(null);
                 }
                 break;
             case RC_IMAGE_CAPTURE_VENUE:
@@ -276,7 +281,7 @@ public class MainActivity
 //                            if (aTask.isSuccessful()) {
 //                                // When the image has successfully uploaded, we get its download URL
 //                                Uri downloadUri = aTask.getResult();
-////                                Venue venue = new Venue("TODO", downloadUri.toString(), 0, 0, 0);
+////                                Venue venue = new Venue("", downloadUri.toString(), 0, 0, 0);
 ////                                String key = mDatabaseReference.child(getString(R.string.venues_database)).push().getKey();
 ////                                mDatabaseReference.child(getString(R.string.venues_database)).child(key).setValue(venue);
 ////                                startVenueActivity(key);
@@ -309,7 +314,7 @@ public class MainActivity
 //                            if (aTask.isSuccessful()) {
 //                                // When the image has successfully uploaded, we get its download URL
 //                                Uri downloadUri = aTask.getResult();
-////                                MexEntry mexEntry = new MexEntry("", "TODO", 2.5f, 10.00f, downloadUri.toString());
+////                                MexEntry mexEntry = new MexEntry("", "", 2.5f, 10.00f, downloadUri.toString());
 ////                                String key = mDatabaseReference.child(getString(R.string.entries_database)).push().getKey();
 ////                                mDatabaseReference.child(getString(R.string.entries_database)).child(key).setValue(mexEntry);
 ////                                startDetailActivity(key);
@@ -351,7 +356,9 @@ public class MainActivity
     protected void onResume() {
         super.onResume();
         mFirebaseAuth.addAuthStateListener(mAuthStateListener);
-        mListFragment.reloadData();
+        if (mFirebaseAuth.getUid() != null) {
+            mListFragment.reloadData();
+        }
     }
 
     public void onAddNewVenueClick(View view) {

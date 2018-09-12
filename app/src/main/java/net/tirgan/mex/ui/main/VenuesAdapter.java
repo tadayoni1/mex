@@ -2,11 +2,11 @@ package net.tirgan.mex.ui.main;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.GridView;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.RatingBar;
@@ -21,7 +21,6 @@ import com.google.firebase.database.ValueEventListener;
 import com.squareup.picasso.Picasso;
 
 import net.tirgan.mex.R;
-import net.tirgan.mex.model.MexEntry;
 import net.tirgan.mex.model.Venue;
 
 import java.util.ArrayList;
@@ -103,30 +102,31 @@ public class VenuesAdapter
                 .child(userId)
                 .child(mContext.getString(R.string.entries_database));
 
-        mexEntriesDatabaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot aDataSnapshot) {
-                ArrayList<String> mexEntriesKeys = new ArrayList<>();
-                for (DataSnapshot dataSnapshot : aDataSnapshot.getChildren()) {
-                    MexEntry mexEntry = dataSnapshot.getValue(MexEntry.class);
-                    if (mexEntry.getVenueKey().equals(mKeys.get(position))) {
-                        mexEntriesKeys.add(dataSnapshot.getKey());
-                    }
-                }
-                if (mexEntriesKeys != null) {
-                    holder.mVenueGridView.setAdapter(new EntriesAdapter(mContext, mexEntriesKeys, mKeys.get(position)));
-//                    holder.mVenueGridView.setVisibility(View.VISIBLE);
-                } else {
-                    holder.mVenueGridView.setAdapter(null);
-//                    holder.mVenueGridView.setVisibility(View.GONE);
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError aDatabaseError) {
-
-            }
-        });
+//        mexEntriesDatabaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
+//            @Override
+//            public void onDataChange(@NonNull DataSnapshot aDataSnapshot) {
+//                ArrayList<String> mexEntriesKeys = new ArrayList<>();
+//                for (DataSnapshot dataSnapshot : aDataSnapshot.getChildren()) {
+//                    MexEntry mexEntry = dataSnapshot.getValue(MexEntry.class);
+//                    if (mexEntry.getVenueKey().equals(mKeys.get(position))) {
+//                        mexEntriesKeys.add(dataSnapshot.getKey());
+//                    }
+//                }
+//                if (mexEntriesKeys != null) {
+                    holder.mVenueRecyclerView.setLayoutManager(new LinearLayoutManager(mContext, LinearLayoutManager.HORIZONTAL, false));
+                    holder.mVenueRecyclerView.setAdapter(new EntriesAdapter(mContext, mKeys.get(position)));
+////                    holder.mVenueRecyclerView.setVisibility(View.VISIBLE);
+//                } else {
+//                    holder.mVenueRecyclerView.setAdapter(null);
+////                    holder.mVenueRecyclerView.setVisibility(View.GONE);
+//                }
+//            }
+//
+//            @Override
+//            public void onCancelled(@NonNull DatabaseError aDatabaseError) {
+//
+//            }
+//        });
 
     }
 
@@ -146,7 +146,7 @@ public class VenuesAdapter
         public final ImageView mVenueImageView;
         public final TextView mVenueTextView;
         public final RatingBar mVenueRatingBar;
-        public final GridView mVenueGridView;
+        public final RecyclerView mVenueRecyclerView;
         public final ImageButton mVenueExpandImageButton;
 
         public VenuesAdapterViewHolder(View itemView) {
@@ -154,16 +154,16 @@ public class VenuesAdapter
             mVenueImageView = itemView.findViewById(R.id.venue_lv_iv);
             mVenueTextView = itemView.findViewById(R.id.venue_lv_tv);
             mVenueRatingBar = itemView.findViewById(R.id.venue_lv_rb);
-            mVenueGridView = itemView.findViewById(R.id.venue_entries_gv);
+            mVenueRecyclerView = itemView.findViewById(R.id.venue_entries_lv);
             mVenueExpandImageButton = itemView.findViewById(R.id.expand_btn);
 
             mVenueExpandImageButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    if (mVenueGridView.getVisibility() == View.VISIBLE) {
-                        mVenueGridView.setVisibility(View.GONE);
+                    if (mVenueRecyclerView.getVisibility() == View.VISIBLE) {
+                        mVenueRecyclerView.setVisibility(View.GONE);
                     } else {
-                        mVenueGridView.setVisibility(View.VISIBLE);
+                        mVenueRecyclerView.setVisibility(View.VISIBLE);
                     }
                 }
             });

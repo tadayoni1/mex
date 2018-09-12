@@ -162,7 +162,7 @@ public class VenueActivity extends AppCompatActivity {
                                 String userId = FirebaseAuth.getInstance().getUid();
                                 final DatabaseReference entriesDatabaseReference = FirebaseDatabase.getInstance()
                                         .getReference().child(getString(R.string.users_database)).child(userId).child(getString(R.string.entries_database));
-                                entriesDatabaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
+                                entriesDatabaseReference.addValueEventListener(new ValueEventListener() {
                                     @Override
                                     public void onDataChange(@NonNull DataSnapshot aDataSnapshot) {
                                         for (DataSnapshot dataSnapshot : aDataSnapshot.getChildren()) {
@@ -173,6 +173,8 @@ public class VenueActivity extends AppCompatActivity {
                                                 entriesDatabaseReference.child(dataSnapshot.getKey()).removeValue();
                                             }
                                         }
+                                        FirebaseStorage.getInstance().getReferenceFromUrl(mVenue.getImageUri()).delete();
+                                        mVenuesDatabaseReference.removeValue();
                                         finish();
                                     }
 
@@ -214,11 +216,13 @@ public class VenueActivity extends AppCompatActivity {
             @Override
             public void onDataChange(@NonNull DataSnapshot aDataSnapshot) {
                 mVenue = aDataSnapshot.getValue(Venue.class);
-                if (mVenue.getImageUri() != null && !mVenue.getImageUri().isEmpty()) {
-                    Picasso.get().load(mVenue.getImageUri()).into(mVenueImageView);
+                if (mVenue != null) {
+                    if (mVenue.getImageUri() != null && !mVenue.getImageUri().isEmpty()) {
+                        Picasso.get().load(mVenue.getImageUri()).into(mVenueImageView);
+                    }
+                    mEditText.setText(mVenue.getName());
+                    mRatingBar.setRating(mVenue.getRating());
                 }
-                mEditText.setText(mVenue.getName());
-                mRatingBar.setRating(mVenue.getRating());
             }
 
             @Override
