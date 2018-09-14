@@ -12,6 +12,8 @@ import com.firebase.jobdispatcher.JobService;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationServices;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 import net.tirgan.mex.R;
 
@@ -28,6 +30,7 @@ public class RegisterGeoLocationsFirebaseJobService
     public boolean onStartJob(final JobParameters job) {
         mIsEnabled = PreferenceManager.getDefaultSharedPreferences(this).getBoolean(getString(R.string.settings_enable_notifications), false);
         if (mIsEnabled) {
+            final DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
             mBackgroundTask = new AsyncTask() {
                 @Override
                 protected Object doInBackground(Object[] aObjects) {
@@ -44,7 +47,7 @@ public class RegisterGeoLocationsFirebaseJobService
                             .build();
 
                     mGeofencing = new Geofencing(context);
-                    mGeofencing.updateGeofenceListAndRegisterAll();
+                    mGeofencing.updateGeofenceListAndRegisterAll(databaseReference);
 
                     return null;
                 }

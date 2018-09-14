@@ -12,6 +12,7 @@ import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
@@ -55,7 +56,8 @@ import butterknife.ButterKnife;
 public class MainActivity
         extends AppCompatActivity
         implements ListFragment.ListFragmentOnClickHandler, OnMapReadyCallback,
-        GoogleMap.OnMyLocationButtonClickListener, GoogleMap.OnMyLocationClickListener {
+        GoogleMap.OnMyLocationButtonClickListener, GoogleMap.OnMyLocationClickListener,
+        SortByDialogFragment.NoticeDialogListener {
 
 
     private static final int RC_SIGN_IN = 1;
@@ -337,7 +339,7 @@ public class MainActivity
                     Boolean result = data.getBooleanExtra(VenueActivity.RETURN_INTENT_EXTRA_IS_LOCATION_CHANGED, false);
                     if (result) {
                         if (mGeofencing != null) {
-                            mGeofencing.updateGeofenceListAndRegisterAll();
+                            mGeofencing.updateGeofenceListAndRegisterAll(FirebaseDatabase.getInstance().getReference());
                         }
                     }
                 }
@@ -356,9 +358,9 @@ public class MainActivity
     protected void onResume() {
         super.onResume();
         mFirebaseAuth.addAuthStateListener(mAuthStateListener);
-        if (mFirebaseAuth.getUid() != null) {
-            mListFragment.reloadData();
-        }
+//        if (mFirebaseAuth.getUid() != null) {
+//            mListFragment.reloadData();
+//        }
     }
 
     public void onAddNewVenueClick(View view) {
@@ -424,6 +426,11 @@ public class MainActivity
         startVenueActivity(key);
     }
 
+    @Override
+    public void onSortByImageButtonClick() {
+        showSortByDialog();
+    }
+
     private void setLocation() {
         if (MiscUtils.checkPermissionsAndRequest(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, RC_LOCATION, this)) {
 
@@ -472,4 +479,19 @@ public class MainActivity
 
     }
 
+    private void showSortByDialog() {
+        DialogFragment dialogFragment = new SortByDialogFragment();
+        dialogFragment.show(getSupportFragmentManager(), SortByDialogFragment.class.getSimpleName());
+    }
+
+
+    @Override
+    public void onDialogPositiveClick(int aSortBy, float aFilterByMinRating) {
+        mListFragment.setSortAndFilter(aSortBy, aFilterByMinRating);
+    }
+
+    @Override
+    public void onDialogNegativeClick(DialogFragment dialog) {
+
+    }
 }

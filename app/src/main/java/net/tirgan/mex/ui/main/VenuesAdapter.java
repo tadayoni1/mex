@@ -7,6 +7,8 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Filter;
+import android.widget.Filterable;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.RatingBar;
@@ -22,18 +24,35 @@ import com.squareup.picasso.Picasso;
 
 import net.tirgan.mex.R;
 import net.tirgan.mex.model.Venue;
+import net.tirgan.mex.utilities.MiscUtils;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class VenuesAdapter
-        extends RecyclerView.Adapter<VenuesAdapter.VenuesAdapterViewHolder> {
+        extends RecyclerView.Adapter<VenuesAdapter.VenuesAdapterViewHolder>
+        implements Filterable {
 
+
+    public static final int SORT_BY_ENTRY_DATE = 1;
+    public static final int SORT_BY_NAME = 2;
+    public static final int SORT_BY_RATING = 3;
 
     private final Context mContext;
     private final FirebaseDatabase mDatabase;
     private final DatabaseReference mVenuesDatabaseReference;
-    private ArrayList<Venue> mVenues;
-    private ArrayList<String> mKeys;
+    private List<Venue> mVenues;
+    private List<String> mKeys;
+    private List<Venue> mVenuesFiltered;
+    private List<String> mKeysFiltered;
+
+    private int mSortBy;
+    private float mFilterByMinRating;
+
+    public void setSortAndFilter(int aSortBy, float aFilterByMinRating) {
+        mSortBy = aSortBy;
+        mFilterByMinRating = aFilterByMinRating;
+    }
 
     private final VenuesAdapterOnClickHandler mClickHandler;
 
@@ -52,12 +71,14 @@ public class VenuesAdapter
                 .child(mContext.getString(R.string.venues_database));
         reloadData();
         mClickHandler = aClickHandler;
-    }
 
-    public void reloadData() {
+        mFilterByMinRating = 0;
+        mSortBy = 1;
+
         mVenuesDatabaseReference.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot aDataSnapshot) {
+                // TODO: disable enable searchview before and after data is loaded
                 mVenues = new ArrayList<>();
                 mKeys = new ArrayList<>();
                 for (DataSnapshot dataSnapshot : aDataSnapshot.getChildren()) {
@@ -66,6 +87,8 @@ public class VenuesAdapter
                     String key = dataSnapshot.getKey();
                     mKeys.add(key);
                 }
+                mVenuesFiltered = mVenues;
+                mKeysFiltered = mKeys;
                 notifyDataSetChanged();
             }
 
@@ -74,6 +97,28 @@ public class VenuesAdapter
 
             }
         });
+    }
+
+    public void reloadData() {
+//        mVenuesDatabaseReference.addValueEventListener(new ValueEventListener() {
+//            @Override
+//            public void onDataChange(@NonNull DataSnapshot aDataSnapshot) {
+//                mVenues = new ArrayList<>();
+//                mKeys = new ArrayList<>();
+//                for (DataSnapshot dataSnapshot : aDataSnapshot.getChildren()) {
+//                    Venue venue = dataSnapshot.getValue(Venue.class);
+//                    mVenues.add(venue);
+//                    String key = dataSnapshot.getKey();
+//                    mKeys.add(key);
+//                }
+//                notifyDataSetChanged();
+//            }
+//
+//            @Override
+//            public void onCancelled(@NonNull DatabaseError aDatabaseError) {
+//
+//            }
+//        });
     }
 
     @NonNull
@@ -87,7 +132,7 @@ public class VenuesAdapter
 
     @Override
     public void onBindViewHolder(@NonNull final VenuesAdapterViewHolder holder, final int position) {
-        Venue venue = mVenues.get(position);
+        Venue venue = mVenuesFiltered.get(position);
         if (venue.getImageUri() != null && !venue.getImageUri().isEmpty()) {
             Picasso.get()
                     .load(venue.getImageUri())
@@ -113,8 +158,8 @@ public class VenuesAdapter
 //                    }
 //                }
 //                if (mexEntriesKeys != null) {
-                    holder.mVenueRecyclerView.setLayoutManager(new LinearLayoutManager(mContext, LinearLayoutManager.HORIZONTAL, false));
-                    holder.mVenueRecyclerView.setAdapter(new EntriesAdapter(mContext, mKeys.get(position)));
+        holder.mVenueRecyclerView.setLayoutManager(new LinearLayoutManager(mContext, LinearLayoutManager.HORIZONTAL, false));
+        holder.mVenueRecyclerView.setAdapter(new EntriesAdapter(mContext, mKeysFiltered.get(position)));
 ////                    holder.mVenueRecyclerView.setVisibility(View.VISIBLE);
 //                } else {
 //                    holder.mVenueRecyclerView.setAdapter(null);
@@ -130,12 +175,48 @@ public class VenuesAdapter
 
     }
 
+
+    @Override
+    public Filter getFilter() {
+        return new Filter() {
+            @Override
+            protected FilterResults performFiltering(CharSequence constraint) {
+                String constraintString = constraint.toString().toLowerCase();
+                if (constraintString.isEmpty()) {
+                    mVenuesFiltered = mVenues;
+                    mKeysFiltered = mKeys;
+                } else {
+                    mVenuesFiltered = new ArrayList<>();
+                    mKeysFiltered = new ArrayList<>();
+                    for (int i = 0; i < mVenues.size(); i++) {
+                        if (mVenues.get(i).getName().toLowerCase().contains(constraintString)) {
+                            if (mVenues.get(i).getRating() >= mFilterByMinRating) {
+                                mVenuesFiltered.add(mVenues.get(i));
+                                mKeysFiltered.add(mKeys.get(i));
+                            }
+                        }
+                    }
+                    if (mSortBy > 1) {
+                        mVenuesFiltered = MiscUtils.sortVenues(mVenues, mSortBy);
+                    }
+                }
+                return null;
+            }
+
+            @Override
+            protected void publishResults(CharSequence constraint, FilterResults results) {
+                notifyDataSetChanged();
+            }
+        };
+    }
+
+
     @Override
     public int getItemCount() {
-        if (mVenues == null) {
+        if (mVenuesFiltered == null) {
             return 0;
         } else {
-            return mVenues.size();
+            return mVenuesFiltered.size();
         }
     }
 
@@ -174,7 +255,7 @@ public class VenuesAdapter
         @Override
         public void onClick(View v) {
             int adapterPosition = getAdapterPosition();
-            mClickHandler.onVenueImageClick(mKeys.get(adapterPosition));
+            mClickHandler.onVenueImageClick(mKeysFiltered.get(adapterPosition));
         }
     }
 }

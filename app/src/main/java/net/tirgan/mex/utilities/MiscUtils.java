@@ -14,7 +14,13 @@ import android.support.v4.content.ContextCompat;
 
 import com.google.android.gms.maps.model.LatLng;
 
+import net.tirgan.mex.model.Venue;
+import net.tirgan.mex.ui.main.VenuesAdapter;
+
 import java.io.ByteArrayOutputStream;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 import static android.content.Context.LOCATION_SERVICE;
 
@@ -54,22 +60,39 @@ public class MiscUtils {
                 aPermissionRequestId);
     }
 
-    public static LatLng getLocation(Context aContext)
-    {
+    public static LatLng getLocation(Context aContext) {
         // Get the location manager
         LocationManager locationManager = (LocationManager) aContext.getSystemService(LOCATION_SERVICE);
         Criteria criteria = new Criteria();
         String bestProvider = locationManager.getBestProvider(criteria, false);
         Location location = locationManager.getLastKnownLocation(bestProvider);
-        Double lat,lon;
+        Double lat, lon;
         try {
-            lat = location.getLatitude ();
-            lon = location.getLongitude ();
+            lat = location.getLatitude();
+            lon = location.getLongitude();
             return new LatLng(lat, lon);
-        }
-        catch (NullPointerException e){
+        } catch (NullPointerException e) {
             e.printStackTrace();
             return null;
         }
     }
+
+    public static List<Venue> sortVenues(List<Venue> aVenues, final int aSortBy) {
+        Collections.sort(aVenues, new Comparator<Venue>() {
+            @Override
+            public int compare(Venue aVenue1, Venue aVenue2) {
+                switch (aSortBy) {
+                    case VenuesAdapter.SORT_BY_RATING:
+                        return (int) (aVenue1.getRating() - aVenue2.getRating());
+                    case VenuesAdapter.SORT_BY_NAME:
+                        return aVenue1.getName().compareTo(aVenue2.getName());
+                    case VenuesAdapter.SORT_BY_ENTRY_DATE:
+                        return 0;
+                }
+                return 0;
+            }
+        });
+     return aVenues;
+    }
+
 }

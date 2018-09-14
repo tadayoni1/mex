@@ -18,7 +18,6 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import net.tirgan.mex.R;
@@ -85,10 +84,11 @@ public class Geofencing implements ResultCallback<Status>,
         }
     }
 
-    public void updateGeofenceListAndRegisterAll() {
+    // Database reference has to be passed. If the getReference() call is made inside this method it will fail inside the AsyncTaskView in RegisterGeoLocationsFirebaseJobService in onStartJob
+    public void updateGeofenceListAndRegisterAll(DatabaseReference aDatabaseReference) {
         mGeofenceList = new ArrayList<>();
         final String userId = FirebaseAuth.getInstance().getUid();
-        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference().child(mContext.getString(R.string.users_database)).child(userId).child(mContext.getString(R.string.venues_database));
+        DatabaseReference databaseReference = aDatabaseReference.child(mContext.getString(R.string.users_database)).child(userId).child(mContext.getString(R.string.venues_database));
         databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot aDataSnapshot) {

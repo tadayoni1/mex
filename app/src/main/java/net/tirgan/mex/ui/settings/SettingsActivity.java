@@ -26,6 +26,7 @@ import android.view.MenuItem;
 import com.firebase.ui.auth.AuthUI;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.database.FirebaseDatabase;
 
 import net.tirgan.mex.R;
 import net.tirgan.mex.geofencing.Geofencing;
@@ -149,7 +150,7 @@ public class SettingsActivity
         if (key.equals(getString(R.string.settings_enable_notifications))) {
             Geofencing geofencing = new Geofencing(this);
             if (PreferenceManager.getDefaultSharedPreferences(this).getBoolean(getString(R.string.settings_enable_notifications), false)) {
-                geofencing.updateGeofenceListAndRegisterAll();
+                geofencing.updateGeofenceListAndRegisterAll(FirebaseDatabase.getInstance().getReference());
             } else {
                 geofencing.unRegisterAllGeofences();
 
