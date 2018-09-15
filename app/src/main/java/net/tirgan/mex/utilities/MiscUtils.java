@@ -8,6 +8,7 @@ import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationManager;
 import android.net.Uri;
+import android.os.Build;
 import android.provider.MediaStore;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -26,6 +27,8 @@ import java.util.List;
 import static android.content.Context.LOCATION_SERVICE;
 
 public class MiscUtils {
+
+    public final static boolean LOLLIPOP_AND_HIGHER = android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP;
 
     public static Uri getImageUri(Context aContext, Bitmap aBitmap) {
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();

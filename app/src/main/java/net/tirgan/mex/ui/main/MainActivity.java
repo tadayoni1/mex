@@ -15,14 +15,18 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
+import android.transition.Explode;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
 
 import com.firebase.ui.auth.AuthUI;
+import com.google.android.gms.analytics.Tracker;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
@@ -35,6 +39,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import net.tirgan.mex.MyFirebaseApp;
 import net.tirgan.mex.R;
 import net.tirgan.mex.geofencing.Geofencing;
 import net.tirgan.mex.model.MexEntry;
@@ -42,6 +47,7 @@ import net.tirgan.mex.model.Venue;
 import net.tirgan.mex.ui.detail.DetailActivity;
 import net.tirgan.mex.ui.settings.SettingsActivity;
 import net.tirgan.mex.ui.venue.VenueActivity;
+import net.tirgan.mex.utilities.AnalyticsUtils;
 import net.tirgan.mex.utilities.FirebaseUtils;
 import net.tirgan.mex.utilities.JobSchedulingUtils;
 import net.tirgan.mex.utilities.MiscUtils;
@@ -59,6 +65,7 @@ public class MainActivity
         GoogleMap.OnMyLocationButtonClickListener, GoogleMap.OnMyLocationClickListener,
         SortByDialogFragment.NoticeDialogListener {
 
+    private static final String LOG_TAG = MainActivity.class.getSimpleName();
 
     private static final int RC_SIGN_IN = 1;
     private static final int RC_IMAGE_CAPTURE_VENUE = 2;
@@ -132,6 +139,7 @@ public class MainActivity
 
         }
     };
+    private Tracker mTracker;
 
 
 //    private void dispatchTakePictureIntent(int aPermissionRequestId) {
@@ -147,10 +155,20 @@ public class MainActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (MiscUtils.LOLLIPOP_AND_HIGHER) {
+            getWindow().requestFeature(Window.FEATURE_CONTENT_TRANSITIONS);
+            Explode explode = new Explode();
+            explode.setDuration(1000);
+            getWindow().setExitTransition(explode);
+        }
         setContentView(R.layout.activity_main);
+//        supportPostponeEnterTransition();
 
         ButterKnife.bind(this);
 
+        // Obtain the shared Tracker instance.
+        MyFirebaseApp application = (MyFirebaseApp) getApplication();
+        mTracker = application.getDefaultTracker();
 
         mFirebaseAuth = FirebaseAuth.getInstance();
 
@@ -241,6 +259,7 @@ public class MainActivity
         mFragmentManager.beginTransaction()
                 .replace(R.id.list_container, mListFragment)
                 .commit();
+        AnalyticsUtils.sendScreenImageName(mTracker, ListFragment.class.getSimpleName(), LOG_TAG);
     }
 
     private void loadMapsFragment() {
@@ -249,6 +268,7 @@ public class MainActivity
         mFragmentManager.beginTransaction()
                 .replace(R.id.list_container, mMapFragment)
                 .commit();
+        AnalyticsUtils.sendScreenImageName(mTracker, MapFragment.class.getSimpleName(), LOG_TAG);
     }
 
     @Override
@@ -358,9 +378,8 @@ public class MainActivity
     protected void onResume() {
         super.onResume();
         mFirebaseAuth.addAuthStateListener(mAuthStateListener);
-//        if (mFirebaseAuth.getUid() != null) {
-//            mListFragment.reloadData();
-//        }
+
+        AnalyticsUtils.sendScreenImageName(mTracker, MainActivity.class.getSimpleName(), LOG_TAG);
     }
 
     public void onAddNewVenueClick(View view) {
@@ -482,6 +501,7 @@ public class MainActivity
     private void showSortByDialog() {
         DialogFragment dialogFragment = new SortByDialogFragment();
         dialogFragment.show(getSupportFragmentManager(), SortByDialogFragment.class.getSimpleName());
+        AnalyticsUtils.sendScreenImageName(mTracker, SortByDialogFragment.class.getSimpleName(), LOG_TAG);
     }
 
 

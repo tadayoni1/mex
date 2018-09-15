@@ -1,6 +1,9 @@
 package net.tirgan.mex.model;
 
-public class MexEntry {
+import android.os.Parcel;
+import android.os.Parcelable;
+
+public class MexEntry implements Parcelable {
 
     private String mVenueKey;
     private String mName;
@@ -20,6 +23,27 @@ public class MexEntry {
         mImageUrl = aImageUrl;
         mDate = aDate;
     }
+
+    protected MexEntry(Parcel in) {
+        mVenueKey = in.readString();
+        mName = in.readString();
+        mRating = in.readFloat();
+        mPrice = in.readFloat();
+        mImageUrl = in.readString();
+        mDate = in.readLong();
+    }
+
+    public static final Creator<MexEntry> CREATOR = new Creator<MexEntry>() {
+        @Override
+        public MexEntry createFromParcel(Parcel in) {
+            return new MexEntry(in);
+        }
+
+        @Override
+        public MexEntry[] newArray(int size) {
+            return new MexEntry[size];
+        }
+    };
 
     public String getVenueKey() {
         return mVenueKey;
@@ -67,5 +91,20 @@ public class MexEntry {
 
     public void setDate(long aDate) {
         mDate = aDate;
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(mVenueKey);
+        dest.writeString(mName);
+        dest.writeFloat(mRating);
+        dest.writeFloat(mPrice);
+        dest.writeString(mImageUrl);
+        dest.writeLong(mDate);
     }
 }

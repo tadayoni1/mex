@@ -11,13 +11,16 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.view.View;
 
+import com.google.android.gms.analytics.Tracker;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 
+import net.tirgan.mex.MyFirebaseApp;
 import net.tirgan.mex.R;
+import net.tirgan.mex.utilities.AnalyticsUtils;
 
 public class MapsActivity
         extends FragmentActivity
@@ -30,11 +33,24 @@ public class MapsActivity
 
     private LatLng mLatLng;
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        AnalyticsUtils.sendScreenImageName(mTracker, MapsActivity.class.getSimpleName());
+    }
+
+    private Tracker mTracker;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
+
+        // Obtain the shared Tracker instance.
+        MyFirebaseApp application = (MyFirebaseApp) getApplication();
+        mTracker = application.getDefaultTracker();
+
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);

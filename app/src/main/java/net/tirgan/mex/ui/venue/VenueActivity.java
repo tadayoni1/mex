@@ -6,6 +6,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -22,7 +23,9 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.RatingBar;
+import android.widget.Toast;
 
+import com.google.android.gms.analytics.Tracker;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.tasks.Continuation;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -37,11 +40,14 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.squareup.picasso.Picasso;
+import com.squareup.picasso.Target;
 
+import net.tirgan.mex.MyFirebaseApp;
 import net.tirgan.mex.R;
 import net.tirgan.mex.model.MexEntry;
 import net.tirgan.mex.model.Venue;
 import net.tirgan.mex.ui.settings.SettingsActivity;
+import net.tirgan.mex.utilities.AnalyticsUtils;
 import net.tirgan.mex.utilities.MiscUtils;
 import net.tirgan.mex.utilities.SettingsUtil;
 
@@ -56,6 +62,7 @@ public class VenueActivity extends AppCompatActivity {
     private static final int RC_IMAGE_CAPTURE_VENUE = 2;
 
     private static final int PICK_MAP_POINT_REQUEST = 1;
+    private static final String INSTANCE_STATE_VENUE = "instance-state-venue";
 
     @BindView(R.id.venue_iv)
     ImageView mVenueImageView;
@@ -75,6 +82,7 @@ public class VenueActivity extends AppCompatActivity {
 
     private Venue mVenue;
     private boolean isLocationChanged = false;
+    private Tracker mTracker;
 
 
     @Override
@@ -83,6 +91,17 @@ public class VenueActivity extends AppCompatActivity {
         setContentView(R.layout.activity_venue);
 
         ButterKnife.bind(this);
+
+        // Obtain the shared Tracker instance.
+        MyFirebaseApp application = (MyFirebaseApp) getApplication();
+        mTracker = application.getDefaultTracker();
+
+        if (savedInstanceState != null) {
+            Venue venue = savedInstanceState.getParcelable(INSTANCE_STATE_VENUE);
+            if (venue != null) {
+                mVenue = venue;
+            }
+        }
 
         Intent intentThatStartedThisActivity = getIntent();
         String key = intentThatStartedThisActivity.getStringExtra(INTENT_EXTRA_FIREBASE_DATABASE_KEY);
@@ -134,6 +153,11 @@ public class VenueActivity extends AppCompatActivity {
         super.onStop();
     }
 
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putParcelable(INSTANCE_STATE_VENUE, mVenue);
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -197,6 +221,31 @@ public class VenueActivity extends AppCompatActivity {
                 Intent intent = new Intent(this, SettingsActivity.class);
                 startActivity(intent);
                 break;
+            case SettingsUtil.MENU_ITEM_SHARE:
+                AnalyticsUtils.sendScreenImageName(mTracker, VenueActivity.class.getSimpleName() + "-share");
+                Picasso.get()
+                        .load(mVenue.getImageUri())
+                        .into(new Target() {
+                            @Override
+                            public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
+                                Intent shareIntent = new Intent();
+                                shareIntent.setAction(Intent.ACTION_SEND);
+                                shareIntent.putExtra(Intent.EXTRA_STREAM, MiscUtils.getImageUri(getApplicationContext(), bitmap));
+                                shareIntent.setType("image/jpeg");
+                                startActivity(Intent.createChooser(shareIntent, getString(R.string.send_to)));
+                            }
+
+                            @Override
+                            public void onBitmapFailed(Exception e, Drawable errorDrawable) {
+                                Toast.makeText(getApplication(), getString(R.string.failed_to_download), Toast.LENGTH_SHORT).show();
+                            }
+
+                            @Override
+                            public void onPrepareLoad(Drawable placeHolderDrawable) {
+
+                            }
+                        });
+                break;
         }
         return true;
     }
@@ -238,12 +287,20 @@ public class VenueActivity extends AppCompatActivity {
     }
 
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        AnalyticsUtils.sendScreenImageName(mTracker, VenueActivity.class.getSimpleName());
+
+    }
+
     private void dispatchCameraIntent(int aPermissionRequestId) {
         if (MiscUtils.checkPermissionsAndRequest(new String[]{Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE}, aPermissionRequestId, this)) {
             Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
             takePictureIntent.putExtra("return-data", true);
             if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
                 startActivityForResult(takePictureIntent, aPermissionRequestId);
+                AnalyticsUtils.sendScreenImageName(mTracker, VenueActivity.class.getSimpleName() + "-take-picture-intent");
             }
         }
     }
