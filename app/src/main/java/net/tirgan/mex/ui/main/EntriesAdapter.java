@@ -1,7 +1,10 @@
 package net.tirgan.mex.ui.main;
 
+import android.app.Activity;
+import android.app.ActivityOptions;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
@@ -23,6 +26,7 @@ import com.squareup.picasso.Picasso;
 import net.tirgan.mex.R;
 import net.tirgan.mex.model.MexEntry;
 import net.tirgan.mex.ui.detail.DetailActivity;
+import net.tirgan.mex.utilities.MiscUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -86,7 +90,13 @@ public class EntriesAdapter extends RecyclerView.Adapter<EntriesAdapter.EntriesA
             public void onClick(View v) {
                 Intent intent = new Intent(mContext, DetailActivity.class);
                 intent.putExtra(DetailActivity.INTENT_EXTRA_DETAIL_FIREBASE_DATABASE_KEY, mKeys.get(holder.getAdapterPosition()));
-                mContext.startActivity(intent);
+                if (MiscUtils.LOLLIPOP_AND_HIGHER) {
+                    v.setTransitionName(mContext.getString(R.string.shared_element_mex_entry_image_view));
+                    Bundle bundle = ActivityOptions.makeSceneTransitionAnimation((Activity) mContext, v, mContext.getString(R.string.shared_element_mex_entry_image_view)).toBundle();
+                    mContext.startActivity(intent, bundle);
+                } else {
+                    mContext.startActivity(intent);
+                }
             }
         });
 

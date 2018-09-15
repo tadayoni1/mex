@@ -17,9 +17,11 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.transition.Fade;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.RatingBar;
@@ -88,7 +90,18 @@ public class VenueActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (MiscUtils.LOLLIPOP_AND_HIGHER) {
+            getWindow().requestFeature(Window.FEATURE_CONTENT_TRANSITIONS);
+            Fade fade = new Fade();
+            fade.setDuration(1000);
+            getWindow().setEnterTransition(fade);
+        }
         setContentView(R.layout.activity_venue);
+
+        if (MiscUtils.LOLLIPOP_AND_HIGHER) {
+            supportPostponeEnterTransition();
+        }
+
 
         ButterKnife.bind(this);
 
@@ -150,6 +163,9 @@ public class VenueActivity extends AppCompatActivity {
             returnIntent.putExtra(RETURN_INTENT_EXTRA_IS_LOCATION_CHANGED, false);
         }
         setResult(Activity.RESULT_OK, returnIntent);
+        if (MiscUtils.LOLLIPOP_AND_HIGHER) {
+            mVenueImageView.setTransitionName(null);
+        }
         super.onStop();
     }
 
@@ -267,7 +283,28 @@ public class VenueActivity extends AppCompatActivity {
                 mVenue = aDataSnapshot.getValue(Venue.class);
                 if (mVenue != null) {
                     if (mVenue.getImageUri() != null && !mVenue.getImageUri().isEmpty()) {
-                        Picasso.get().load(mVenue.getImageUri()).into(mVenueImageView);
+                        if (MiscUtils.LOLLIPOP_AND_HIGHER) {
+                            mVenueImageView.setTransitionName(getString(R.string.shared_element_venue_image_view));
+                        }
+                        Picasso.get().load(mVenue.getImageUri()).into(new Target() {
+                            @Override
+                            public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
+                                mVenueImageView.setImageBitmap(bitmap);
+                                if (MiscUtils.LOLLIPOP_AND_HIGHER) {
+                                    supportStartPostponedEnterTransition();
+                                }
+                            }
+
+                            @Override
+                            public void onBitmapFailed(Exception e, Drawable errorDrawable) {
+
+                            }
+
+                            @Override
+                            public void onPrepareLoad(Drawable placeHolderDrawable) {
+
+                            }
+                        });
                     }
                     mEditText.setText(mVenue.getName());
                     mRatingBar.setRating(mVenue.getRating());

@@ -31,7 +31,7 @@ public class ListFragment
     private ListFragmentOnClickHandler mClickHandler;
 
     public interface ListFragmentOnClickHandler {
-        void onVenueImageClick(String key);
+        void onVenueImageClick(String key, View aView);
 
         void onSortByImageButtonClick();
     }
@@ -106,8 +106,8 @@ public class ListFragment
     }
 
     @Override
-    public void onVenueImageClick(String key) {
-        mClickHandler.onVenueImageClick(key);
+    public void onVenueImageClick(String key, View aView) {
+        mClickHandler.onVenueImageClick(key, aView);
 //        Intent intent = new Intent((Activity) mClickHandler, VenueActivity.class);
 //        intent.putExtra(VenueActivity.INTENT_EXTRA_FIREBASE_DATABASE_KEY, key);
 //        startActivity(intent);

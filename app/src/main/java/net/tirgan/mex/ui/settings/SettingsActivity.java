@@ -210,6 +210,7 @@ public class SettingsActivity
             addPreferencesFromResource(R.xml.pref_general);
             setHasOptionsMenu(true);
 
+            Preference sendFeedbackButton = findPreference(getString(R.string.settings_send_feedback_key));
             Preference logoutButton = findPreference(getString(R.string.settings_logout_key));
             // Bind the summaries of EditText/List/Dialog/Ringtone preferences
             // to their values. When their values change, their summaries are
@@ -232,7 +233,9 @@ public class SettingsActivity
                                     AuthUI.getInstance().signOut(getActivity()).addOnCompleteListener(new OnCompleteListener<Void>() {
                                         @Override
                                         public void onComplete(@NonNull Task<Void> aTask) {
-                                            startActivity(new Intent(getActivity(), MainActivity.class));
+                                            Intent intent = new Intent(getActivity(), MainActivity.class);
+                                            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                                            startActivity(intent);
                                             getActivity().finish();
                                         }
                                     });
@@ -248,13 +251,25 @@ public class SettingsActivity
                     return true;
                 }
             });
+
+            sendFeedbackButton.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+                @Override
+                public boolean onPreferenceClick(Preference preference) {
+                    Intent emailIntent = new Intent(Intent.ACTION_SENDTO, Uri.fromParts(
+                            "mailto", getString(R.string.feedback_email), null));
+                    emailIntent.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.feedback_email_subject));
+                    startActivity(Intent.createChooser(emailIntent, "Send email"));
+                    return true;
+                }
+            });
         }
 
         @Override
         public boolean onOptionsItemSelected(MenuItem item) {
             int id = item.getItemId();
             if (id == android.R.id.home) {
-                startActivity(new Intent(getActivity(), SettingsActivity.class));
+//                startActivity(new Intent(getActivity(), SettingsActivity.class));
+                getActivity().onBackPressed();
                 return true;
             }
             return super.onOptionsItemSelected(item);

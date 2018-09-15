@@ -58,7 +58,7 @@ public class VenuesAdapter
     private final VenuesAdapterOnClickHandler mClickHandler;
 
     public interface VenuesAdapterOnClickHandler {
-        void onVenueImageClick(String key);
+        void onVenueImageClick(String key, View aView);
     }
 
 
@@ -166,9 +166,7 @@ public class VenuesAdapter
             protected void publishResults(CharSequence constraint, FilterResults results) {
                 notifyDataSetChanged();
             }
-        }
-
-                ;
+        };
 
     }
 
@@ -217,7 +215,7 @@ public class VenuesAdapter
         @Override
         public void onClick(View v) {
             int adapterPosition = getAdapterPosition();
-            mClickHandler.onVenueImageClick(mVenuePairsFiltered.get(adapterPosition).second);
+            mClickHandler.onVenueImageClick(mVenuePairsFiltered.get(adapterPosition).second, v);
         }
     }
 }

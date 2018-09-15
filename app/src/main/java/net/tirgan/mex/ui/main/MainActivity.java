@@ -2,6 +2,8 @@ package net.tirgan.mex.ui.main;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.ActivityOptions;
+import android.app.SharedElementCallback;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
@@ -55,6 +57,8 @@ import net.tirgan.mex.utilities.SettingsUtil;
 
 import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -162,7 +166,10 @@ public class MainActivity
             getWindow().setExitTransition(explode);
         }
         setContentView(R.layout.activity_main);
-//        supportPostponeEnterTransition();
+
+//        if (MiscUtils.LOLLIPOP_AND_HIGHER) {
+//            supportPostponeEnterTransition();
+//        }
 
         ButterKnife.bind(this);
 
@@ -386,7 +393,7 @@ public class MainActivity
         Venue venue = new Venue("", FirebaseUtils.VENUE_DEFAULT_IMAGE_DOWNLOAD_URL, FirebaseUtils.DEFAULT_RATING, FirebaseUtils.DEFAULT_LATITUDE, FirebaseUtils.DEFAULT_LONGITUDE);
         String key = mDatabaseReference.child(getString(R.string.venues_database)).push().getKey();
         mDatabaseReference.child(getString(R.string.venues_database)).child(key).setValue(venue);
-        startVenueActivity(key);
+        startVenueActivity(key, null);
 
     }
 
@@ -423,13 +430,23 @@ public class MainActivity
     }
 
 
-    private void startVenueActivity(String key) {
+    private void startVenueActivity(String key, View aView) {
         Intent intent = new Intent(MainActivity.this, VenueActivity.class);
         intent.putExtra(VenueActivity.INTENT_EXTRA_FIREBASE_DATABASE_KEY, key);
-        if (mIsEnabled) {
-            startActivityForResult(intent, RC_VENUE);
+        if (MiscUtils.LOLLIPOP_AND_HIGHER && aView != null) {
+            aView.setTransitionName(getString(R.string.shared_element_venue_image_view));
+            Bundle bundle = ActivityOptions.makeSceneTransitionAnimation(MainActivity.this, aView, getString(R.string.shared_element_venue_image_view)).toBundle();
+            if (mIsEnabled) {
+                startActivityForResult(intent, RC_VENUE, bundle);
+            } else {
+                startActivity(intent, bundle);
+            }
         } else {
-            startActivity(intent);
+            if (mIsEnabled) {
+                startActivityForResult(intent, RC_VENUE);
+            } else {
+                startActivity(intent);
+            }
         }
     }
 
@@ -441,9 +458,10 @@ public class MainActivity
 
 
     @Override
-    public void onVenueImageClick(String key) {
-        startVenueActivity(key);
+    public void onVenueImageClick(String key, View aView) {
+        startVenueActivity(key, aView);
     }
+
 
     @Override
     public void onSortByImageButtonClick() {

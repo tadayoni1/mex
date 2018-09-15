@@ -16,9 +16,11 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.transition.Fade;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
@@ -100,7 +102,17 @@ public class DetailActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (MiscUtils.LOLLIPOP_AND_HIGHER) {
+            getWindow().requestFeature(Window.FEATURE_CONTENT_TRANSITIONS);
+            Fade fade = new Fade();
+            fade.setDuration(1000);
+            getWindow().setEnterTransition(fade);
+        }
         setContentView(R.layout.activity_detail);
+
+        if (MiscUtils.LOLLIPOP_AND_HIGHER) {
+            supportPostponeEnterTransition();
+        }
 
         ButterKnife.bind(this);
 
@@ -308,7 +320,28 @@ public class DetailActivity extends AppCompatActivity {
             public void onDataChange(@NonNull DataSnapshot aDataSnapshot) {
                 mMexEntry = aDataSnapshot.getValue(MexEntry.class);
                 if (mMexEntry.getImageUrl() != null && !mMexEntry.getImageUrl().isEmpty()) {
-                    Picasso.get().load(mMexEntry.getImageUrl()).into(mDetailImageView);
+                    if (MiscUtils.LOLLIPOP_AND_HIGHER) {
+                        mDetailImageView.setTransitionName(getString(R.string.shared_element_mex_entry_image_view));
+                    }
+                    Picasso.get().load(mMexEntry.getImageUrl()).into(new Target() {
+                        @Override
+                        public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
+                            mDetailImageView.setImageBitmap(bitmap);
+                            if (MiscUtils.LOLLIPOP_AND_HIGHER) {
+                                supportStartPostponedEnterTransition();
+                            }
+                        }
+
+                        @Override
+                        public void onBitmapFailed(Exception e, Drawable errorDrawable) {
+
+                        }
+
+                        @Override
+                        public void onPrepareLoad(Drawable placeHolderDrawable) {
+
+                        }
+                    });
                 }
                 mDetailEditText.setText(mMexEntry.getName());
                 mDetailPriceEditText.setText(String.valueOf(mMexEntry.getPrice()));
