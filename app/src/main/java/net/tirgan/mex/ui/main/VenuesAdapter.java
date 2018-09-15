@@ -2,6 +2,7 @@ package net.tirgan.mex.ui.main;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
+import android.support.v4.util.Pair;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -35,16 +36,16 @@ public class VenuesAdapter
 
 
     public static final int SORT_BY_ENTRY_DATE = 1;
+    // All new sort options must have a value greater than VenuesAdapter.SORT_BY_ENTRY_DATE
     public static final int SORT_BY_NAME = 2;
     public static final int SORT_BY_RATING = 3;
 
     private final Context mContext;
     private final FirebaseDatabase mDatabase;
     private final DatabaseReference mVenuesDatabaseReference;
-    private List<Venue> mVenues;
-    private List<String> mKeys;
-    private List<Venue> mVenuesFiltered;
-    private List<String> mKeysFiltered;
+    private List<Pair<Venue, String>> mVenuePairs;
+    private List<Pair<Venue, String>> mVenuePairsFiltered;
+
 
     private int mSortBy;
     private float mFilterByMinRating;
@@ -79,16 +80,13 @@ public class VenuesAdapter
             @Override
             public void onDataChange(@NonNull DataSnapshot aDataSnapshot) {
                 // TODO: disable enable searchview before and after data is loaded
-                mVenues = new ArrayList<>();
-                mKeys = new ArrayList<>();
+                mVenuePairs = new ArrayList<>();
                 for (DataSnapshot dataSnapshot : aDataSnapshot.getChildren()) {
                     Venue venue = dataSnapshot.getValue(Venue.class);
-                    mVenues.add(venue);
                     String key = dataSnapshot.getKey();
-                    mKeys.add(key);
+                    mVenuePairs.add(new Pair<>(venue, key));
                 }
-                mVenuesFiltered = mVenues;
-                mKeysFiltered = mKeys;
+                mVenuePairsFiltered = mVenuePairs;
                 notifyDataSetChanged();
             }
 
@@ -100,25 +98,6 @@ public class VenuesAdapter
     }
 
     public void reloadData() {
-//        mVenuesDatabaseReference.addValueEventListener(new ValueEventListener() {
-//            @Override
-//            public void onDataChange(@NonNull DataSnapshot aDataSnapshot) {
-//                mVenues = new ArrayList<>();
-//                mKeys = new ArrayList<>();
-//                for (DataSnapshot dataSnapshot : aDataSnapshot.getChildren()) {
-//                    Venue venue = dataSnapshot.getValue(Venue.class);
-//                    mVenues.add(venue);
-//                    String key = dataSnapshot.getKey();
-//                    mKeys.add(key);
-//                }
-//                notifyDataSetChanged();
-//            }
-//
-//            @Override
-//            public void onCancelled(@NonNull DatabaseError aDatabaseError) {
-//
-//            }
-//        });
     }
 
     @NonNull
@@ -132,46 +111,24 @@ public class VenuesAdapter
 
     @Override
     public void onBindViewHolder(@NonNull final VenuesAdapterViewHolder holder, final int position) {
-        Venue venue = mVenuesFiltered.get(position);
-        if (venue.getImageUri() != null && !venue.getImageUri().isEmpty()) {
+        Pair<Venue, String> venuePair = mVenuePairsFiltered.get(position);
+        if (venuePair.first.getImageUri() != null && !venuePair.first.getImageUri().isEmpty()) {
             Picasso.get()
-                    .load(venue.getImageUri())
+                    .load(venuePair.first.getImageUri())
                     .into(holder.mVenueImageView);
         }
-        holder.mVenueTextView.setText(venue.getName());
-        holder.mVenueRatingBar.setRating(venue.getRating());
+        holder.mVenueTextView.setText(venuePair.first.getName());
+        holder.mVenueRatingBar.setRating(venuePair.first.getRating());
 
-        String userId = FirebaseAuth.getInstance().getUid();
-        DatabaseReference mexEntriesDatabaseReference = mDatabase.getReference()
-                .child(mContext.getString(R.string.users_database))
-                .child(userId)
-                .child(mContext.getString(R.string.entries_database));
+//        String userId = FirebaseAuth.getInstance().getUid();
+//        DatabaseReference mexEntriesDatabaseReference = mDatabase.getReference()
+//                .child(mContext.getString(R.string.users_database))
+//                .child(userId)
+//                .child(mContext.getString(R.string.entries_database));
 
-//        mexEntriesDatabaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
-//            @Override
-//            public void onDataChange(@NonNull DataSnapshot aDataSnapshot) {
-//                ArrayList<String> mexEntriesKeys = new ArrayList<>();
-//                for (DataSnapshot dataSnapshot : aDataSnapshot.getChildren()) {
-//                    MexEntry mexEntry = dataSnapshot.getValue(MexEntry.class);
-//                    if (mexEntry.getVenueKey().equals(mKeys.get(position))) {
-//                        mexEntriesKeys.add(dataSnapshot.getKey());
-//                    }
-//                }
-//                if (mexEntriesKeys != null) {
+
         holder.mVenueRecyclerView.setLayoutManager(new LinearLayoutManager(mContext, LinearLayoutManager.HORIZONTAL, false));
-        holder.mVenueRecyclerView.setAdapter(new EntriesAdapter(mContext, mKeysFiltered.get(position)));
-////                    holder.mVenueRecyclerView.setVisibility(View.VISIBLE);
-//                } else {
-//                    holder.mVenueRecyclerView.setAdapter(null);
-////                    holder.mVenueRecyclerView.setVisibility(View.GONE);
-//                }
-//            }
-//
-//            @Override
-//            public void onCancelled(@NonNull DatabaseError aDatabaseError) {
-//
-//            }
-//        });
+        holder.mVenueRecyclerView.setAdapter(new EntriesAdapter(mContext, mVenuePairsFiltered.get(position).second));
 
     }
 
@@ -182,41 +139,46 @@ public class VenuesAdapter
             @Override
             protected FilterResults performFiltering(CharSequence constraint) {
                 String constraintString = constraint.toString().toLowerCase();
-                if (constraintString.isEmpty()) {
-                    mVenuesFiltered = mVenues;
-                    mKeysFiltered = mKeys;
-                } else {
-                    mVenuesFiltered = new ArrayList<>();
-                    mKeysFiltered = new ArrayList<>();
-                    for (int i = 0; i < mVenues.size(); i++) {
-                        if (mVenues.get(i).getName().toLowerCase().contains(constraintString)) {
-                            if (mVenues.get(i).getRating() >= mFilterByMinRating) {
-                                mVenuesFiltered.add(mVenues.get(i));
-                                mKeysFiltered.add(mKeys.get(i));
-                            }
+                List<Pair<Venue, String>> venuePairs = new ArrayList<>(mVenuePairs);
+
+                // Sort
+                // if mSortBy equals to VenuesAdapter.SORT_BY_ENTRY_DATE then we don't need to sort.
+                // All new sort options must have a value greater than VenuesAdapter.SORT_BY_ENTRY_DATE
+                if (mSortBy > VenuesAdapter.SORT_BY_ENTRY_DATE) {
+                    venuePairs = MiscUtils.sortVenues(venuePairs, mSortBy);
+                }
+
+                mVenuePairsFiltered = new ArrayList<>();
+                for (int i = 0; i < venuePairs.size(); i++) {
+                    // Filter
+                    if (venuePairs.get(i).first.getRating() >= mFilterByMinRating) {
+                        // Search
+                        if (venuePairs.get(i).first.getName().toLowerCase().contains(constraintString)) {
+                            mVenuePairsFiltered.add(venuePairs.get(i));
                         }
-                    }
-                    if (mSortBy > 1) {
-                        mVenuesFiltered = MiscUtils.sortVenues(mVenues, mSortBy);
                     }
                 }
                 return null;
             }
 
+
             @Override
             protected void publishResults(CharSequence constraint, FilterResults results) {
                 notifyDataSetChanged();
             }
-        };
+        }
+
+                ;
+
     }
 
 
     @Override
     public int getItemCount() {
-        if (mVenuesFiltered == null) {
+        if (mVenuePairsFiltered == null) {
             return 0;
         } else {
-            return mVenuesFiltered.size();
+            return mVenuePairsFiltered.size();
         }
     }
 
@@ -255,7 +217,7 @@ public class VenuesAdapter
         @Override
         public void onClick(View v) {
             int adapterPosition = getAdapterPosition();
-            mClickHandler.onVenueImageClick(mKeysFiltered.get(adapterPosition));
+            mClickHandler.onVenueImageClick(mVenuePairsFiltered.get(adapterPosition).second);
         }
     }
 }

@@ -13,6 +13,7 @@ import android.widget.RadioGroup;
 import android.widget.RatingBar;
 
 import net.tirgan.mex.R;
+import net.tirgan.mex.utilities.SettingsUtil;
 
 public class SortByDialogFragment extends DialogFragment {
 
@@ -61,10 +62,12 @@ public class SortByDialogFragment extends DialogFragment {
         View view = inflater.inflate(R.layout.dialog_sort, null);
 
         mSortByRadioGroup = view.findViewById(R.id.sort_by_rg);
-        mSortByRadioGroup.check(R.id.sort_by_rating_rb);
+        int checkedRadioButton = SettingsUtil.findIdForRadioButton(SettingsUtil.readPrefSort(getContext()));
+        mSortByRadioGroup.check(checkedRadioButton);
 
 
         mFilterByRatingBar = view.findViewById(R.id.filter_by_rating_rb);
+        mFilterByRatingBar.setRating(SettingsUtil.readPrefFilter(getContext()));
         mFilterByRatingBar.setOnRatingBarChangeListener(new RatingBar.OnRatingBarChangeListener() {
             @Override
             public void onRatingChanged(RatingBar ratingBar, float rating, boolean fromUser) {
@@ -77,16 +80,21 @@ public class SortByDialogFragment extends DialogFragment {
                 .setPositiveButton(R.string.apply, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int id) {
-                        int sortBy = 1;
+                        int sortBy;
                         switch (mSortByRadioGroup.getCheckedRadioButtonId()) {
                             case R.id.sort_by_name_rb:
-                                sortBy = 2;
+                                sortBy = VenuesAdapter.SORT_BY_NAME;
                                 break;
                             case R.id.sort_by_rating_rb:
-                                sortBy = 3;
+                                sortBy = VenuesAdapter.SORT_BY_RATING;
+                                break;
+                            case R.id.sort_by_entry_date:
+                                sortBy = VenuesAdapter.SORT_BY_ENTRY_DATE;
+                                break;
                             default:
-                                sortBy = 1;
+                                sortBy = VenuesAdapter.SORT_BY_ENTRY_DATE;
                         }
+                        SettingsUtil.savePrefSortAndFilter(getContext(), sortBy, mFilterByRatingBar.getRating());
                         mListener.onDialogPositiveClick(sortBy, mFilterByRatingBar.getRating());
                     }
                 })

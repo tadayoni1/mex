@@ -89,6 +89,7 @@ public class ListFragment
         mSortByImageButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                // opens sort/filter fragment
                 mClickHandler.onSortByImageButtonClick();
             }
         });

@@ -11,6 +11,7 @@ import android.net.Uri;
 import android.provider.MediaStore;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.util.Pair;
 
 import com.google.android.gms.maps.model.LatLng;
 
@@ -77,22 +78,23 @@ public class MiscUtils {
         }
     }
 
-    public static List<Venue> sortVenues(List<Venue> aVenues, final int aSortBy) {
-        Collections.sort(aVenues, new Comparator<Venue>() {
+    public static List<Pair<Venue, String>> sortVenues(List<Pair<Venue, String>> aVenuePairs, final int aSortBy) {
+        Collections.sort(aVenuePairs, new Comparator<Pair<Venue, String>>() {
             @Override
-            public int compare(Venue aVenue1, Venue aVenue2) {
+            public int compare(Pair<Venue, String> aVenuePair1, Pair<Venue, String> aVenuePair2) {
                 switch (aSortBy) {
                     case VenuesAdapter.SORT_BY_RATING:
-                        return (int) (aVenue1.getRating() - aVenue2.getRating());
+                        return (int) (aVenuePair2.first.getRating() - aVenuePair1.first.getRating());
                     case VenuesAdapter.SORT_BY_NAME:
-                        return aVenue1.getName().compareTo(aVenue2.getName());
+                        return aVenuePair1.first.getName().compareTo(aVenuePair2.first.getName());
                     case VenuesAdapter.SORT_BY_ENTRY_DATE:
                         return 0;
                 }
                 return 0;
             }
         });
-     return aVenues;
+
+        return aVenuePairs;
     }
 
 }
