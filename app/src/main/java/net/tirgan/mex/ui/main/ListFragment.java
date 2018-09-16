@@ -26,7 +26,6 @@ public class ListFragment
     private RecyclerView mRecyclerView;
     private VenuesAdapter mVenuesAdapter;
     private SearchView mSearchView;
-    private ImageButton mSortByImageButton;
 
     private ListFragmentOnClickHandler mClickHandler;
 
@@ -62,7 +61,7 @@ public class ListFragment
         adView.loadAd(adRequest);
 
         mSearchView = rootView.findViewById(R.id.fragment_list_sv);
-        mSortByImageButton = rootView.findViewById(R.id.sort_by_ib);
+        ImageButton sortByImageButton = rootView.findViewById(R.id.sort_by_ib);
 
         mRecyclerView = rootView.findViewById(R.id.venues_rv);
         LinearLayoutManager layoutManager = new LinearLayoutManager(getContext());
@@ -86,7 +85,7 @@ public class ListFragment
             }
         });
 
-        mSortByImageButton.setOnClickListener(new View.OnClickListener() {
+        sortByImageButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 // opens sort/filter fragment

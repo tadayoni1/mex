@@ -34,9 +34,8 @@ import java.util.List;
 public class EntriesAdapter extends RecyclerView.Adapter<EntriesAdapter.EntriesAdapterViewHolder> {
 
 
-    private Context mContext;
-    private String mVenueKey;
-    private final FirebaseDatabase mDatabase;
+    private final Context mContext;
+    private final String mVenueKey;
     private final DatabaseReference mEntriesDatabaseReference;
     private List<MexEntry> mMexEntries;
     private List<String> mKeys;
@@ -115,9 +114,9 @@ public class EntriesAdapter extends RecyclerView.Adapter<EntriesAdapter.EntriesA
     public EntriesAdapter(@NonNull Context aContext, @NonNull String aVenueKey) {
         mContext = aContext;
         mVenueKey = aVenueKey;
-        mDatabase = FirebaseDatabase.getInstance();
+        FirebaseDatabase database = FirebaseDatabase.getInstance();
         String userId = FirebaseAuth.getInstance().getUid();
-        mEntriesDatabaseReference = mDatabase.getReference()
+        mEntriesDatabaseReference = database.getReference()
                 .child(mContext.getString(R.string.users_database))
                 .child(userId)
                 .child(mContext.getString(R.string.entries_database));

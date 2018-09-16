@@ -3,7 +3,6 @@ package net.tirgan.mex.ui.main;
 import android.Manifest;
 import android.app.Activity;
 import android.app.ActivityOptions;
-import android.app.SharedElementCallback;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
@@ -57,8 +56,6 @@ import net.tirgan.mex.utilities.SettingsUtil;
 
 import java.util.Arrays;
 import java.util.Date;
-import java.util.List;
-import java.util.Map;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -79,7 +76,6 @@ public class MainActivity
 
     private FragmentManager mFragmentManager;
     private ListFragment mListFragment;
-    private SupportMapFragment mMapFragment;
 
     @BindView(R.id.navigation)
     BottomNavigationView mBottomNavigationView;
@@ -98,7 +94,7 @@ public class MainActivity
 
     private GoogleMap mGoogleMap;
 
-    private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
+    private final BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new BottomNavigationView.OnNavigationItemSelectedListener() {
 
         @Override
@@ -118,7 +114,6 @@ public class MainActivity
 
     private static final long LOCATION_REFRESH_TIME = 60000;
     private static final float LOCATION_REFRESH_DISTANCE = 10.0f;
-    private LocationManager mLocationManager;
     private final LocationListener mLocationListener = new LocationListener() {
         @Override
         public void onLocationChanged(Location location) {
@@ -230,10 +225,10 @@ public class MainActivity
 
         mListFragment = new ListFragment();
 
-        mLocationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+        LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, LOCATION_REFRESH_TIME,
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, LOCATION_REFRESH_TIME,
                     LOCATION_REFRESH_DISTANCE, mLocationListener);
         }
 
@@ -270,10 +265,10 @@ public class MainActivity
     }
 
     private void loadMapsFragment() {
-        mMapFragment = SupportMapFragment.newInstance();
-        mMapFragment.getMapAsync(this);
+        SupportMapFragment mapFragment = SupportMapFragment.newInstance();
+        mapFragment.getMapAsync(this);
         mFragmentManager.beginTransaction()
-                .replace(R.id.list_container, mMapFragment)
+                .replace(R.id.list_container, mapFragment)
                 .commit();
         AnalyticsUtils.sendScreenImageName(mTracker, MapFragment.class.getSimpleName(), LOG_TAG);
     }
@@ -408,7 +403,7 @@ public class MainActivity
 
     @Override
     public void onRequestPermissionsResult(int requestCode,
-                                           String permissions[], int[] grantResults) {
+                                           @NonNull String permissions[], @NonNull int[] grantResults) {
         switch (requestCode) {
             case RC_LOCATION: {
                 // If request is cancelled, the result arrays are empty.
@@ -421,7 +416,6 @@ public class MainActivity
                     // permission denied, boo! Disable the
                     // functionality that depends on this permission.
                 }
-                return;
             }
 
             // other 'case' lines to check for other

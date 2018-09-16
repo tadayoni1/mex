@@ -29,7 +29,6 @@ public class MapsActivity
         OnMapReadyCallback {
 
     public static final String RETURN_INTENT_EXTRA_PICKED_POINT = "return-intent-extra-picked-point";
-    private GoogleMap mMap;
 
     private LatLng mLatLng;
 
@@ -70,9 +69,9 @@ public class MapsActivity
      */
     @Override
     public void onMapReady(GoogleMap googleMap) {
-        mMap = googleMap;
+        GoogleMap map = googleMap;
 
-        mMap.setOnCameraChangeListener(new GoogleMap.OnCameraChangeListener() {
+        map.setOnCameraChangeListener(new GoogleMap.OnCameraChangeListener() {
             @Override
             public void onCameraChange(CameraPosition cameraPosition) {
                 mLatLng = new LatLng(cameraPosition.target.latitude, cameraPosition.target.longitude);
@@ -80,10 +79,10 @@ public class MapsActivity
         });
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            mMap.setMyLocationEnabled(true);
+            map.setMyLocationEnabled(true);
         }
-        mMap.setOnMyLocationButtonClickListener(this);
-        mMap.setOnMyLocationClickListener(this);
+        map.setOnMyLocationButtonClickListener(this);
+        map.setOnMyLocationClickListener(this);
 
 //        mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
 //            @Override

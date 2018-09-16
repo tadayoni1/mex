@@ -85,8 +85,6 @@ public class DetailActivity extends AppCompatActivity {
     @BindView(R.id.detail_venue_spinner)
     Spinner mVenueSpinner;
 
-    private FirebaseDatabase mDetailDatabase;
-
     private DatabaseReference mDetailDatabaseReference;
     private DatabaseReference mVenuesDatabaseReference;
 
@@ -135,7 +133,7 @@ public class DetailActivity extends AppCompatActivity {
         initializeMexEntryDetails();
         initializeVenuesSpinner();
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
         mDetailEditText.addTextChangedListener(new TextWatcher() {
@@ -266,12 +264,12 @@ public class DetailActivity extends AppCompatActivity {
     }
 
     private void initializeFirebase() {
-        mDetailDatabase = FirebaseDatabase.getInstance();
+        FirebaseDatabase detailDatabase = FirebaseDatabase.getInstance();
         mFirebaseStorage = FirebaseStorage.getInstance();
 
         String userId = FirebaseAuth.getInstance().getUid();
-        mDetailDatabaseReference = mDetailDatabase.getReference().child(getString(R.string.users_database)).child(userId).child(getString(R.string.entries_database)).child(mKey);
-        mVenuesDatabaseReference = mDetailDatabase.getReference().child(getString(R.string.users_database)).child(userId).child(getString(R.string.venues_database));
+        mDetailDatabaseReference = detailDatabase.getReference().child(getString(R.string.users_database)).child(userId).child(getString(R.string.entries_database)).child(mKey);
+        mVenuesDatabaseReference = detailDatabase.getReference().child(getString(R.string.users_database)).child(userId).child(getString(R.string.venues_database));
 
         mStorageReference = mFirebaseStorage.getReference().child(getString(R.string.users_database)).child(userId).child(getString(R.string.entries_database));
     }
@@ -390,7 +388,6 @@ public class DetailActivity extends AppCompatActivity {
                     // permission denied, boo! Disable the
                     // functionality that depends on this permission.
                 }
-                return;
             }
 
             // other 'case' lines to check for other

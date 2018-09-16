@@ -73,7 +73,6 @@
         app:layout_constraintTop_toBottomOf="@+id/venue_rb" />
 
     <ImageButton
-        android:id="@+id/location_ib"
         app:srcCompat="@drawable/map_marker_plus"
         android:background="@color/fui_transparent"
         android:layout_width="wrap_content"

@@ -26,10 +26,9 @@
         android:layout_above="@+id/center_mark_view"
         android:layout_centerHorizontal="true"
         map:srcCompat="@drawable/map_marker"
-        />
+        android:contentDescription="@string/cd_selected_location_marker" />
 
     <Button
-        android:id="@+id/select_location_btn"
         android:layout_width="match_parent"
         android:layout_height="48dp"
         android:layout_alignParentBottom="true"

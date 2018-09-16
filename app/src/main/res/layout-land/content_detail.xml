@@ -33,7 +33,8 @@
             android:background="@color/camera_image_button_background"
             android:onClick="onAddNewPhotoMexEntry"
             android:scaleType="fitXY"
-            app:srcCompat="@drawable/camera" />
+            app:srcCompat="@drawable/camera"
+            android:contentDescription="@string/cd_take_new_picture" />
 
 
     </FrameLayout>

@@ -41,8 +41,6 @@ public class VenuesAdapter
     public static final int SORT_BY_RATING = 3;
 
     private final Context mContext;
-    private final FirebaseDatabase mDatabase;
-    private final DatabaseReference mVenuesDatabaseReference;
     private List<Pair<Venue, String>> mVenuePairs;
     private List<Pair<Venue, String>> mVenuePairsFiltered;
 
@@ -64,9 +62,9 @@ public class VenuesAdapter
 
     public VenuesAdapter(Context aContext, VenuesAdapterOnClickHandler aClickHandler) {
         mContext = aContext;
-        mDatabase = FirebaseDatabase.getInstance();
+        FirebaseDatabase database = FirebaseDatabase.getInstance();
         String userId = FirebaseAuth.getInstance().getUid();
-        mVenuesDatabaseReference = mDatabase.getReference()
+        DatabaseReference venuesDatabaseReference = database.getReference()
                 .child(mContext.getString(R.string.users_database))
                 .child(userId)
                 .child(mContext.getString(R.string.venues_database));
@@ -76,10 +74,9 @@ public class VenuesAdapter
         mFilterByMinRating = 0;
         mSortBy = 1;
 
-        mVenuesDatabaseReference.addValueEventListener(new ValueEventListener() {
+        venuesDatabaseReference.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot aDataSnapshot) {
-                // TODO: disable enable searchview before and after data is loaded
                 mVenuePairs = new ArrayList<>();
                 for (DataSnapshot dataSnapshot : aDataSnapshot.getChildren()) {
                     Venue venue = dataSnapshot.getValue(Venue.class);

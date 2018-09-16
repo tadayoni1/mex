@@ -23,7 +23,8 @@
             android:scaleType="centerCrop"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            tools:src="@drawable/venue_sample" />
+            tools:src="@drawable/venue_sample"
+            android:contentDescription="@string/cd_venue_image" />
 
         <TextView
             android:id="@+id/venue_lv_tv"
@@ -62,7 +63,8 @@
             app:srcCompat="@drawable/unfold_more_vertical"
             android:background="@color/fui_transparent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            android:contentDescription="@string/cd_expand_button" />
 
         <android.support.v7.widget.RecyclerView
             android:id="@+id/venue_entries_lv"

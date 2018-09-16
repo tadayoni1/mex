@@ -53,7 +53,6 @@ public class NotificationUtils {
                         .setSmallIcon(R.drawable.map_marker)
                         .setLargeIcon(largeIcon(aContext))
                         .setContentTitle(aContext.getString(R.string.mex))
-                        // TODO
                         .setContentText(aContext.getString(R.string.format_notification_small, venue.getName()))
                         .setStyle(new NotificationCompat.BigTextStyle().bigText(aContext.getString(R.string.format_notification_big, venue.getName())))
                         .setDefaults(Notification.DEFAULT_SOUND)
@@ -84,7 +83,6 @@ public class NotificationUtils {
 
     private static Bitmap largeIcon(Context aContext) {
         Resources resources = aContext.getResources();
-        Bitmap largeIcon = BitmapFactory.decodeResource(resources, R.drawable.camera);
-        return largeIcon;
+        return BitmapFactory.decodeResource(resources, R.drawable.camera);
     }
 }

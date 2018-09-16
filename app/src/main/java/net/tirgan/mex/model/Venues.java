@@ -4,8 +4,8 @@ import java.util.List;
 
 public class Venues {
 
-    private String mFirebaseKey;
-    private String mVenueName;
+    private final String mFirebaseKey;
+    private final String mVenueName;
 
     public Venues(String aFirebaseKey, String aVenueName) {
         mFirebaseKey = aFirebaseKey;

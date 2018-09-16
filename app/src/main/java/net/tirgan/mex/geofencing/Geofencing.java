@@ -31,8 +31,8 @@ public class Geofencing implements ResultCallback<Status>,
 
     private static final long GEOFENCE_TIMEOUT = 24 * 60 * 60 * 1000;
     private static final float GEOFENCE_RADIUS = 500.0f;
-    private GoogleApiClient mGoogleApiClient;
-    private Context mContext;
+    private final GoogleApiClient mGoogleApiClient;
+    private final Context mContext;
 
     private PendingIntent mGeofencePendingIntent;
     private List<Geofence> mGeofenceList;

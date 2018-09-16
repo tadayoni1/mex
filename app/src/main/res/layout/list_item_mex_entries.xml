@@ -22,7 +22,8 @@
             android:layout_weight="7"
             android:adjustViewBounds="true"
             android:scaleType="centerCrop"
-            tools:src="@drawable/noodle" />
+            tools:src="@drawable/noodle"
+            android:contentDescription="@string/cd_mex_image" />
 
         <TextView
             android:id="@+id/mex_entry_lv_tv"

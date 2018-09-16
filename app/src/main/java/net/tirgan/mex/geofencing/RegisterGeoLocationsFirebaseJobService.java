@@ -24,12 +24,11 @@ public class RegisterGeoLocationsFirebaseJobService
     private AsyncTask mBackgroundTask;
     private GoogleApiClient mClient;
     private Geofencing mGeofencing;
-    private boolean mIsEnabled;
 
     @Override
     public boolean onStartJob(final JobParameters job) {
-        mIsEnabled = PreferenceManager.getDefaultSharedPreferences(this).getBoolean(getString(R.string.settings_enable_notifications), false);
-        if (mIsEnabled) {
+        boolean isEnabled = PreferenceManager.getDefaultSharedPreferences(this).getBoolean(getString(R.string.settings_enable_notifications), false);
+        if (isEnabled) {
             final DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
             mBackgroundTask = new AsyncTask() {
                 @Override

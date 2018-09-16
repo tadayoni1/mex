@@ -4,17 +4,12 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.location.Criteria;
-import android.location.Location;
-import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Build;
 import android.provider.MediaStore;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.util.Pair;
-
-import com.google.android.gms.maps.model.LatLng;
 
 import net.tirgan.mex.model.Venue;
 import net.tirgan.mex.ui.main.VenuesAdapter;
@@ -23,8 +18,6 @@ import java.io.ByteArrayOutputStream;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-
-import static android.content.Context.LOCATION_SERVICE;
 
 public class MiscUtils {
 
@@ -64,22 +57,22 @@ public class MiscUtils {
                 aPermissionRequestId);
     }
 
-    public static LatLng getLocation(Context aContext) {
-        // Get the location manager
-        LocationManager locationManager = (LocationManager) aContext.getSystemService(LOCATION_SERVICE);
-        Criteria criteria = new Criteria();
-        String bestProvider = locationManager.getBestProvider(criteria, false);
-        Location location = locationManager.getLastKnownLocation(bestProvider);
-        Double lat, lon;
-        try {
-            lat = location.getLatitude();
-            lon = location.getLongitude();
-            return new LatLng(lat, lon);
-        } catch (NullPointerException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
+//    public static LatLng getLocation(Context aContext) {
+//        // Get the location manager
+//        LocationManager locationManager = (LocationManager) aContext.getSystemService(LOCATION_SERVICE);
+//        Criteria criteria = new Criteria();
+//        String bestProvider = locationManager.getBestProvider(criteria, false);
+//        Location location = locationManager.getLastKnownLocation(bestProvider);
+//        Double lat, lon;
+//        try {
+//            lat = location.getLatitude();
+//            lon = location.getLongitude();
+//            return new LatLng(lat, lon);
+//        } catch (NullPointerException e) {
+//            e.printStackTrace();
+//            return null;
+//        }
+//    }
 
     public static List<Pair<Venue, String>> sortVenues(List<Pair<Venue, String>> aVenuePairs, final int aSortBy) {
         Collections.sort(aVenuePairs, new Comparator<Pair<Venue, String>>() {

@@ -75,8 +75,6 @@ public class VenueActivity extends AppCompatActivity {
     @BindView(R.id.venue_et)
     EditText mEditText;
 
-    private FirebaseDatabase mVenuesDatabase;
-
     private DatabaseReference mVenuesDatabaseReference;
 
     private FirebaseStorage mFirebaseStorage;
@@ -269,10 +267,10 @@ public class VenueActivity extends AppCompatActivity {
 
     private void initializeFirebase(String aKey) {
         mFirebaseStorage = FirebaseStorage.getInstance();
-        mVenuesDatabase = FirebaseDatabase.getInstance();
+        FirebaseDatabase venuesDatabase = FirebaseDatabase.getInstance();
 
         String userId = FirebaseAuth.getInstance().getUid();
-        mVenuesDatabaseReference = mVenuesDatabase.getReference().child(getString(R.string.users_database)).child(userId).child(getString(R.string.venues_database)).child(aKey);
+        mVenuesDatabaseReference = venuesDatabase.getReference().child(getString(R.string.users_database)).child(userId).child(getString(R.string.venues_database)).child(aKey);
         mStorageReference = mFirebaseStorage.getReference().child(getString(R.string.users_database)).child(userId).child(getString(R.string.venues_database));
     }
 
@@ -356,7 +354,6 @@ public class VenueActivity extends AppCompatActivity {
                     // permission denied, boo! Disable the
                     // functionality that depends on this permission.
                 }
-                return;
             }
 
             // other 'case' lines to check for other
