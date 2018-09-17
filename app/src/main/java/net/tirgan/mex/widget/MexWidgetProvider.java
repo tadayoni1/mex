@@ -17,9 +17,6 @@ import net.tirgan.mex.ui.main.MainActivity;
  */
 public class MexWidgetProvider extends AppWidgetProvider {
 
-    public static final String WIDGET_INTENT_EXTRA_VENUE_KEY = "widget-intent-extra-venue-key";
-    public static final String WIDGET_INTENT_EXTRA_APPWIDGET_ID = "widget-intent-extra-appwidget-id";
-
     static void updateAppWidget(Context context, AppWidgetManager appWidgetManager,
                                 int appWidgetId) {
 

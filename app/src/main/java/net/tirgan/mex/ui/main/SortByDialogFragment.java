@@ -10,7 +10,6 @@ import android.support.v4.app.DialogFragment;
 import android.support.v7.app.AlertDialog;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.RatingBar;
 
@@ -20,7 +19,6 @@ import net.tirgan.mex.utilities.SettingsUtil;
 public class SortByDialogFragment extends DialogFragment {
 
     private RadioGroup mSortByRadioGroup;
-    private RadioButton mSortByRatingRadioButton;
 
     private RatingBar mFilterByRatingBar;
 

@@ -70,7 +70,6 @@ public class MainActivity
 
     private static final int RC_SIGN_IN = 1;
     private static final int RC_IMAGE_CAPTURE_VENUE = 2;
-    private static final int RC_IMAGE_CAPTURE_MEX_ENTRY = 3;
     private static final int RC_LOCATION = 4;
     private static final int RC_VENUE = 5;
 

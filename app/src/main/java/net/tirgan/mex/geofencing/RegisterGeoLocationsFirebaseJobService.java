@@ -11,7 +11,6 @@ import com.firebase.jobdispatcher.JobParameters;
 import com.firebase.jobdispatcher.JobService;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.location.LocationServices;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
@@ -22,7 +21,6 @@ public class RegisterGeoLocationsFirebaseJobService
         implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
 
     private AsyncTask mBackgroundTask;
-    private GoogleApiClient mClient;
     private Geofencing mGeofencing;
 
     @Override
@@ -34,16 +32,6 @@ public class RegisterGeoLocationsFirebaseJobService
                 @Override
                 protected Object doInBackground(Object[] aObjects) {
                     Context context = RegisterGeoLocationsFirebaseJobService.this;
-
-
-                    // Build up the LocationServices API client
-                    // Uses the addApi method to request the LocationServices API
-                    // Also uses enableAutoManage to automatically when to connect/suspend the client
-                    mClient = new GoogleApiClient.Builder(context)
-                            .addConnectionCallbacks(RegisterGeoLocationsFirebaseJobService.this)
-                            .addOnConnectionFailedListener(RegisterGeoLocationsFirebaseJobService.this)
-                            .addApi(LocationServices.API)
-                            .build();
 
                     mGeofencing = new Geofencing(context);
                     mGeofencing.updateGeofenceListAndRegisterAll(databaseReference);
