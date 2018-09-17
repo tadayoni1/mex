@@ -96,27 +96,9 @@ public class ListFragment
         return rootView;
     }
 
-    private void initializeRecyclerView() {
-        LinearLayoutManager layoutManager = new LinearLayoutManager(getContext());
-        mRecyclerView.setLayoutManager(layoutManager);
-        mVenuesAdapter = new VenuesAdapter(getContext(), this);
-        mRecyclerView.setAdapter(mVenuesAdapter);
-        mVenuesAdapter.reloadData();
-    }
-
     @Override
     public void onVenueImageClick(String key, View aView) {
         mClickHandler.onVenueImageClick(key, aView);
-//        Intent intent = new Intent((Activity) mClickHandler, VenueActivity.class);
-//        intent.putExtra(VenueActivity.INTENT_EXTRA_FIREBASE_DATABASE_KEY, key);
-//        startActivity(intent);
-
-    }
-
-    public void reloadData() {
-        if (mVenuesAdapter != null) {
-            mVenuesAdapter.reloadData();
-        }
     }
 
     public void setSortAndFilter(int aSortBy, float aFilterByMinRating) {

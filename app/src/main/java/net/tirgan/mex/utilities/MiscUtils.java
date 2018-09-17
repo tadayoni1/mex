@@ -57,23 +57,6 @@ public class MiscUtils {
                 aPermissionRequestId);
     }
 
-//    public static LatLng getLocation(Context aContext) {
-//        // Get the location manager
-//        LocationManager locationManager = (LocationManager) aContext.getSystemService(LOCATION_SERVICE);
-//        Criteria criteria = new Criteria();
-//        String bestProvider = locationManager.getBestProvider(criteria, false);
-//        Location location = locationManager.getLastKnownLocation(bestProvider);
-//        Double lat, lon;
-//        try {
-//            lat = location.getLatitude();
-//            lon = location.getLongitude();
-//            return new LatLng(lat, lon);
-//        } catch (NullPointerException e) {
-//            e.printStackTrace();
-//            return null;
-//        }
-//    }
-
     public static List<Pair<Venue, String>> sortVenues(List<Pair<Venue, String>> aVenuePairs, final int aSortBy) {
         Collections.sort(aVenuePairs, new Comparator<Pair<Venue, String>>() {
             @Override

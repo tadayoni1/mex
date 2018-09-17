@@ -5,6 +5,7 @@ import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.widget.RemoteViews;
 
 import net.tirgan.mex.R;
@@ -23,13 +24,11 @@ public class MexWidgetProvider extends AppWidgetProvider {
                                 int appWidgetId) {
 
         CharSequence widgetText = MexWidgetConfigureActivity.loadTitlePref(context, appWidgetId);
-        String key = MexWidgetConfigureActivity.loadKeyPref(context, appWidgetId);
         // Construct the RemoteViews object
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.mex_widget);
         views.setTextViewText(R.id.ap_mex_tv, widgetText);
         Intent intent = new Intent(context, MexWidgetRemoteViewsService.class);
-        intent.putExtra(WIDGET_INTENT_EXTRA_VENUE_KEY, key);
-        intent.putExtra(WIDGET_INTENT_EXTRA_APPWIDGET_ID, appWidgetId);
+        intent.setData(Uri.fromParts("content", String.valueOf(appWidgetId), null));
         views.setRemoteAdapter(R.id.ap_mex_lv, intent);
 
         // Handle clicking on widget to open the app

@@ -81,15 +81,12 @@ public class MainActivity
     BottomNavigationView mBottomNavigationView;
 
     private boolean mIsEnabled;
-    private GoogleApiClient mClient;
     private Geofencing mGeofencing;
 
     private FirebaseAuth mFirebaseAuth;
     private FirebaseAuth.AuthStateListener mAuthStateListener;
-    //    private FirebaseStorage mFirebaseStorage;
     private FirebaseDatabase mDatabase;
 
-    //    private StorageReference mStorageReference;
     private DatabaseReference mDatabaseReference;
 
     private GoogleMap mGoogleMap;
@@ -141,16 +138,6 @@ public class MainActivity
     private Tracker mTracker;
 
 
-//    private void dispatchTakePictureIntent(int aPermissionRequestId) {
-//        if (MiscUtils.checkPermissionsAndRequest(new String[]{Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE}, aPermissionRequestId, this)) {
-//            Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-//            takePictureIntent.putExtra("return-data", true);
-//            if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
-//                startActivityForResult(takePictureIntent, aPermissionRequestId);
-//            }
-//        }
-//    }
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -161,10 +148,6 @@ public class MainActivity
             getWindow().setExitTransition(explode);
         }
         setContentView(R.layout.activity_main);
-
-//        if (MiscUtils.LOLLIPOP_AND_HIGHER) {
-//            supportPostponeEnterTransition();
-//        }
 
         ButterKnife.bind(this);
 
@@ -204,8 +187,6 @@ public class MainActivity
             }
         };
 
-//        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-//        Boolean isNotificationEnabled = sharedPreferences.getBoolean(getString(R.string.settings_enable_notifications), false);
     }
 
     private void initializeActivity(Bundle savedInstanceState) {
@@ -283,78 +264,6 @@ public class MainActivity
                 } else if (resultCode == RESULT_OK) {
                     initializeActivity(null);
                 }
-                break;
-            case RC_IMAGE_CAPTURE_VENUE:
-//                if (resultCode == RESULT_OK) {
-//                    Uri selectedImageUri = MiscUtils.getImageUri(this, (Bitmap) data.getExtras().get("data"));
-//                    final StorageReference photoRef = mStorageReference.child(getString(R.string.venues_database)).child(selectedImageUri.getLastPathSegment());
-//                    UploadTask uploadTask = photoRef.putFile(selectedImageUri);
-//                    Task<Uri> urlTask = uploadTask.continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
-//                        @Override
-//                        public Task<Uri> then(@NonNull Task<UploadTask.TaskSnapshot> aTask) throws Exception {
-//                            if (!aTask.isSuccessful()) {
-//                                throw aTask.getException();
-//                            }
-//
-//                            // Continue with the task to get the download URL
-//                            return photoRef.getDownloadUrl();
-//                        }
-//                    }).addOnCompleteListener(new OnCompleteListener<Uri>() {
-//                        @Override
-//                        public void onComplete(@NonNull Task<Uri> aTask) {
-//                            if (aTask.isSuccessful()) {
-//                                // When the image has successfully uploaded, we get its download URL
-//                                Uri downloadUri = aTask.getResult();
-////                                Venue venue = new Venue("", downloadUri.toString(), 0, 0, 0);
-////                                String key = mDatabaseReference.child(getString(R.string.venues_database)).push().getKey();
-////                                mDatabaseReference.child(getString(R.string.venues_database)).child(key).setValue(venue);
-////                                startVenueActivity(key);
-//                            } else {
-//                                // Handle failures
-//                                // ...
-//                            }
-//                        }
-//                    });
-//                }
-//                break;
-//            case RC_IMAGE_CAPTURE_MEX_ENTRY:
-//                if (resultCode == RESULT_OK) {
-//                    Uri selectedImageUri = MiscUtils.getImageUri(this, (Bitmap) data.getExtras().get("data"));
-//                    final StorageReference photoRef = mStorageReference.child(getString(R.string.entries_database)).child(selectedImageUri.getLastPathSegment());
-//                    UploadTask uploadTask = photoRef.putFile(selectedImageUri);
-//                    Task<Uri> urlTask = uploadTask.continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
-//                        @Override
-//                        public Task<Uri> then(@NonNull Task<UploadTask.TaskSnapshot> aTask) throws Exception {
-//                            if (!aTask.isSuccessful()) {
-//                                throw aTask.getException();
-//                            }
-//
-//                            // Continue with the task to get the download URL
-//                            return photoRef.getDownloadUrl();
-//                        }
-//                    }).addOnCompleteListener(new OnCompleteListener<Uri>() {
-//                        @Override
-//                        public void onComplete(@NonNull Task<Uri> aTask) {
-//                            if (aTask.isSuccessful()) {
-//                                // When the image has successfully uploaded, we get its download URL
-//                                Uri downloadUri = aTask.getResult();
-////                                MexEntry mexEntry = new MexEntry("", "", 2.5f, 10.00f, downloadUri.toString());
-////                                String key = mDatabaseReference.child(getString(R.string.entries_database)).push().getKey();
-////                                mDatabaseReference.child(getString(R.string.entries_database)).child(key).setValue(mexEntry);
-////                                startDetailActivity(key);
-//                            } else {
-//                                // Handle failures
-//                                // ...
-//                            }
-//                        }
-//                    });
-//
-//
-////                    MexEntry entry = new MexEntry("-LLJ7973_z7-7aIyvK3w", "Pizza", 3.4f, 10.5f, "https://s3-media1.fl.yelpcdn.com/bphoto/DtEMGISoO83Z5WjpWWNMiA/o.jpg");
-////                    String userId = mFirebaseAuth.getUid();
-////                    mDatabaseReference.child(getString(R.string.entries_database)).push().setValue(entry);
-//                }
-//
                 break;
             case RC_VENUE:
                 if (resultCode == Activity.RESULT_OK) {
@@ -481,10 +390,6 @@ public class MainActivity
                 }
             });
 
-//            LatLng currentLocation = MiscUtils.getLocation(this);
-//            if (currentLocation != null) {
-//                mGoogleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 15));
-//            }
         }
     }
 

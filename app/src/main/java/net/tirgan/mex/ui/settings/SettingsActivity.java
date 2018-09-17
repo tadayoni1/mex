@@ -1,10 +1,12 @@
 package net.tirgan.mex.ui.settings;
 
+import android.Manifest;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
@@ -31,6 +33,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import net.tirgan.mex.R;
 import net.tirgan.mex.geofencing.Geofencing;
 import net.tirgan.mex.ui.main.MainActivity;
+import net.tirgan.mex.utilities.MiscUtils;
 
 import java.util.List;
 
@@ -48,6 +51,9 @@ import java.util.List;
 public class SettingsActivity
         extends AppCompatPreferenceActivity
         implements SharedPreferences.OnSharedPreferenceChangeListener {
+
+
+    private static final int RC_GEOFENCE_LOCATION = 1;
 
     /**
      * A preference value change listener that updates the preference's summary
@@ -148,15 +154,45 @@ public class SettingsActivity
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
         if (key.equals(getString(R.string.settings_enable_notifications))) {
-            Geofencing geofencing = new Geofencing(this);
             if (PreferenceManager.getDefaultSharedPreferences(this).getBoolean(getString(R.string.settings_enable_notifications), false)) {
-                geofencing.updateGeofenceListAndRegisterAll(FirebaseDatabase.getInstance().getReference());
+                if (MiscUtils.checkPermissionsAndRequest(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, RC_GEOFENCE_LOCATION, this)) {
+                    registerGeofences();
+                }
             } else {
-                geofencing.unRegisterAllGeofences();
+                unregisterGeofences();
+            }
+        }
+    }
 
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch (requestCode) {
+            case RC_GEOFENCE_LOCATION: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    // permission was granted, yay! Do the
+                    // contacts-related task you need to do.
+                    registerGeofences();
+                } else {
+                    // permission denied, boo! Disable the
+                    // functionality that depends on this permission.
+                }
             }
 
+            // other 'case' lines to check for other
+            // permissions this app might request.
         }
+    }
+
+    private void registerGeofences() {
+        Geofencing geofencing = new Geofencing(this);
+        geofencing.updateGeofenceListAndRegisterAll(FirebaseDatabase.getInstance().getReference());
+    }
+
+    private void unregisterGeofences() {
+        Geofencing geofencing = new Geofencing(this);
+        geofencing.unRegisterAllGeofences();
     }
 
 
@@ -268,7 +304,6 @@ public class SettingsActivity
         public boolean onOptionsItemSelected(MenuItem item) {
             int id = item.getItemId();
             if (id == android.R.id.home) {
-//                startActivity(new Intent(getActivity(), SettingsActivity.class));
                 getActivity().onBackPressed();
                 return true;
             }
@@ -287,12 +322,6 @@ public class SettingsActivity
             super.onCreate(savedInstanceState);
             addPreferencesFromResource(R.xml.pref_notification);
             setHasOptionsMenu(true);
-
-            // Bind the summaries of EditText/List/Dialog/Ringtone preferences
-            // to their values. When their values change, their summaries are
-            // updated to reflect the new value, per the Android Design
-            // guidelines.
-//            bindPreferenceSummaryToValue(findPreference(getString(R.string.settings_notifications_new_message_ringtone)));
         }
 
         @Override

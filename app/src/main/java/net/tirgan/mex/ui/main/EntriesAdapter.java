@@ -58,28 +58,6 @@ public class EntriesAdapter extends RecyclerView.Adapter<EntriesAdapter.EntriesA
             Picasso.get()
                     .load(mexEntry.getImageUrl())
                     .into(holder.mMexEntryImageView);
-
-//            Picasso.get().load(mexEntry.getImageUrl()).into(new Target() {
-//                @Override
-//                public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
-//                    holder.mMexEntryImageView.setImageBitmap(bitmap);
-//                    if (bitmap != null) {
-//                        Palette p = Palette.from(bitmap).generate();
-//                        int color = p.getLightVibrantColor(0xFFFFFFFF);
-//                        holder.mMexListItemCardView.setBackgroundColor(color);
-//                    }
-//                }
-//
-//                @Override
-//                public void onBitmapFailed(Exception e, Drawable errorDrawable) {
-//                    holder.mMexEntryImageView.setImageResource(R.drawable.food_apple);
-//                }
-//
-//                @Override
-//                public void onPrepareLoad(Drawable placeHolderDrawable) {
-//                    holder.mMexEntryImageView.setImageDrawable(placeHolderDrawable);
-//                }
-//            });
         }
         holder.mMexEntryTextView.setText(mexEntry.getName());
         holder.mMexEntryRatingBar.setRating(mexEntry.getRating());

@@ -36,7 +36,6 @@ public class VenuesAdapter
 
 
     public static final int SORT_BY_ENTRY_DATE = 1;
-    // All new sort options must have a value greater than VenuesAdapter.SORT_BY_ENTRY_DATE
     public static final int SORT_BY_NAME = 2;
     public static final int SORT_BY_RATING = 3;
 
@@ -116,13 +115,6 @@ public class VenuesAdapter
         }
         holder.mVenueTextView.setText(venuePair.first.getName());
         holder.mVenueRatingBar.setRating(venuePair.first.getRating());
-
-//        String userId = FirebaseAuth.getInstance().getUid();
-//        DatabaseReference mexEntriesDatabaseReference = mDatabase.getReference()
-//                .child(mContext.getString(R.string.users_database))
-//                .child(userId)
-//                .child(mContext.getString(R.string.entries_database));
-
 
         holder.mVenueRecyclerView.setLayoutManager(new LinearLayoutManager(mContext, LinearLayoutManager.HORIZONTAL, false));
         holder.mVenueRecyclerView.setAdapter(new EntriesAdapter(mContext, mVenuePairsFiltered.get(position).second));

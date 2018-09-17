@@ -69,9 +69,8 @@ public class MapsActivity
      */
     @Override
     public void onMapReady(GoogleMap googleMap) {
-        GoogleMap map = googleMap;
 
-        map.setOnCameraChangeListener(new GoogleMap.OnCameraChangeListener() {
+        googleMap.setOnCameraChangeListener(new GoogleMap.OnCameraChangeListener() {
             @Override
             public void onCameraChange(CameraPosition cameraPosition) {
                 mLatLng = new LatLng(cameraPosition.target.latitude, cameraPosition.target.longitude);
@@ -79,16 +78,11 @@ public class MapsActivity
         });
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            map.setMyLocationEnabled(true);
+            googleMap.setMyLocationEnabled(true);
         }
-        map.setOnMyLocationButtonClickListener(this);
-        map.setOnMyLocationClickListener(this);
+        googleMap.setOnMyLocationButtonClickListener(this);
+        googleMap.setOnMyLocationClickListener(this);
 
-//        mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
-//            @Override
-//            public void onMapClick(LatLng latLng) {
-//            }
-//        });
     }
 
     @Override

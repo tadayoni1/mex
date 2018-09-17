@@ -275,7 +275,7 @@ public class VenueActivity extends AppCompatActivity {
     }
 
     private void initializeVenueDetails() {
-        mVenuesDatabaseReference.addValueEventListener(new ValueEventListener() {
+        mVenuesDatabaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot aDataSnapshot) {
                 mVenue = aDataSnapshot.getValue(Venue.class);

@@ -11,6 +11,7 @@ import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Spinner;
 
+import com.google.android.gms.analytics.Tracker;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -18,9 +19,11 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import net.tirgan.mex.MyFirebaseApp;
 import net.tirgan.mex.R;
 import net.tirgan.mex.model.Venue;
 import net.tirgan.mex.model.Venues;
+import net.tirgan.mex.utilities.AnalyticsUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,6 +36,7 @@ public class MexWidgetConfigureActivity extends Activity {
     private static final String PREFS_NAME = "net.tirgan.mex.widget.MexWidgetProvider";
     private static final String PREF_PREFIX_KEY = "appwidget_";
     private static final String PREF_PREFIX_VENUE_KEY = "appwidget_venue_";
+    private Tracker mTracker;
 
     private Spinner mSpinner;
 
@@ -41,6 +45,8 @@ public class MexWidgetConfigureActivity extends Activity {
     final View.OnClickListener mOnClickListener = new View.OnClickListener() {
         public void onClick(View v) {
             final Context context = MexWidgetConfigureActivity.this;
+
+            AnalyticsUtils.sendScreenImageName(mTracker, MexWidgetConfigureActivity.class.getSimpleName() + "-Add-Widget");
 
             // When the button is clicked, store the string locally
             String widgetText = mSpinner.getSelectedItem().toString();
@@ -110,6 +116,12 @@ public class MexWidgetConfigureActivity extends Activity {
         // Set the result to CANCELED.  This will cause the widget host to cancel
         // out of the widget placement if the user presses the back button.
         setResult(RESULT_CANCELED);
+
+        // Obtain the shared Tracker instance.
+        MyFirebaseApp application = (MyFirebaseApp) getApplication();
+        mTracker = application.getDefaultTracker();
+
+        AnalyticsUtils.sendScreenImageName(mTracker, MexWidgetConfigureActivity.class.getSimpleName());
 
         setContentView(R.layout.mex_widget_configure);
         mSpinner = findViewById(R.id.ap_mex_conf_spinner);

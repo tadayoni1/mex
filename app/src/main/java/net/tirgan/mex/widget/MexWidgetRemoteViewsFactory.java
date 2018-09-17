@@ -28,10 +28,11 @@ class MexWidgetRemoteViewsFactory implements RemoteViewsService.RemoteViewsFacto
     private final String mVenueKey;
     private final int mAppWidgetId;
 
+
     public MexWidgetRemoteViewsFactory(final Context aContext, Intent aIntent) {
         mContext = aContext;
-        mVenueKey = aIntent.getStringExtra(MexWidgetProvider.WIDGET_INTENT_EXTRA_VENUE_KEY);
-        mAppWidgetId = aIntent.getIntExtra(MexWidgetProvider.WIDGET_INTENT_EXTRA_APPWIDGET_ID, -1);
+        mAppWidgetId = Integer.valueOf(aIntent.getData().getSchemeSpecificPart());
+        mVenueKey = MexWidgetConfigureActivity.loadKeyPref(aContext, mAppWidgetId);
         String userId = FirebaseAuth.getInstance().getUid();
         DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference()
                 .child(mContext.getString(R.string.users_database))
