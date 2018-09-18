@@ -27,13 +27,13 @@
         <ImageButton
             android:layout_width="36dp"
             android:layout_height="32dp"
-            android:scaleType="fitXY"
-            android:background="@color/camera_image_button_background"
             android:layout_gravity="bottom|end"
             android:layout_margin="12dp"
+            android:background="@color/camera_image_button_background"
+            android:contentDescription="@string/cd_take_new_picture"
             android:onClick="onAddNewPhotoMexEntry"
-            app:srcCompat="@drawable/camera"
-            android:contentDescription="@string/cd_take_new_picture" />
+            android:scaleType="fitXY"
+            app:srcCompat="@drawable/camera" />
 
     </FrameLayout>
 
@@ -50,38 +50,54 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/detail_fl" />
 
-    <EditText
-        android:id="@+id/detail_et"
+    <android.support.design.widget.TextInputLayout
+        android:id="@+id/detail_til"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:ems="10"
-        android:inputType="text"
-        android:hint="@string/detail_enter_name"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/detail_rb" />
+        app:layout_constraintTop_toBottomOf="@+id/detail_rb">
 
-    <EditText
-        android:id="@+id/detail_price_et"
+        <android.support.design.widget.TextInputEditText
+            android:id="@+id/detail_et"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:ems="10"
+            android:hint="@string/detail_enter_name"
+            android:inputType="text" />
+    </android.support.design.widget.TextInputLayout>
+
+    <android.support.design.widget.TextInputLayout
+        android:id="@+id/detail_price_til"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:ems="6"
-        android:inputType="number"
-        android:hint="@string/detail_enter_price"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/detail_et"
-        />
+        app:layout_constraintTop_toBottomOf="@+id/detail_til">
+
+        <android.support.design.widget.TextInputEditText
+            android:id="@+id/detail_price_et"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:ems="6"
+            android:hint="@string/detail_enter_price"
+            android:inputType="number" />
+
+    </android.support.design.widget.TextInputLayout>
 
     <android.support.v7.widget.AppCompatSpinner
         android:id="@+id/detail_venue_spinner"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
+        android:layout_marginLeft="24dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginRight="24dp"
+        android:layout_marginEnd="24dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/detail_price_et" />
+        app:layout_constraintTop_toBottomOf="@+id/detail_price_til" />
 
 </android.support.constraint.ConstraintLayout>

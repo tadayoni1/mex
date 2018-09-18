@@ -48,6 +48,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="end|bottom"
             android:layout_margin="16dp"
+            android:contentDescription="@string/cd_add_new_venue_or_entry"
             fab:fab_addButtonColorNormal="@color/colorAccent"
             fab:fab_addButtonColorPressed="@color/colorAccentPressed"
             fab:fab_addButtonPlusIconColor="@color/white"
@@ -59,6 +60,7 @@
             <com.getbase.floatingactionbutton.FloatingActionButton
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:contentDescription="@string/cd_add_new_venue"
                 fab:fab_colorNormal="@color/colorAccent"
                 android:onClick="onAddNewVenueClick"
                 app:fab_icon="@drawable/silverware_fork_knife"
@@ -69,6 +71,7 @@
             <com.getbase.floatingactionbutton.FloatingActionButton
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:contentDescription="@string/cd_add_new_mex_entry"
                 fab:fab_colorNormal="@color/colorAccent"
                 android:onClick="onAddNewEntryClick"
                 app:fab_icon="@drawable/food_apple"

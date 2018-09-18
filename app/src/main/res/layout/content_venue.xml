@@ -30,10 +30,10 @@
             android:layout_gravity="bottom|end"
             android:layout_margin="12dp"
             android:background="@color/camera_image_button_background"
+            android:contentDescription="@string/add_venue_photo"
             android:onClick="onAddNewPhotoVenue"
             android:scaleType="fitXY"
-            app:srcCompat="@drawable/camera"
-            android:contentDescription="@string/add_venue_photo" />
+            app:srcCompat="@drawable/camera" />
     </FrameLayout>
 
     <RatingBar
@@ -49,28 +49,35 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/venue_fl" />
 
-    <EditText
-        android:id="@+id/venue_et"
+    <android.support.design.widget.TextInputLayout
+        android:id="@+id/venue_til"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:ems="10"
-        android:inputType="text"
-        android:hint="@string/venue_enter_name"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/venue_rb" />
+        app:layout_constraintTop_toBottomOf="@+id/venue_rb">
+
+        <android.support.design.widget.TextInputEditText
+            android:id="@+id/venue_et"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:ems="10"
+            android:hint="@string/venue_enter_name"
+            android:inputType="text" />
+
+    </android.support.design.widget.TextInputLayout>
 
     <ImageButton
-        app:srcCompat="@drawable/map_marker_plus"
-        android:background="@color/fui_transparent"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
+        android:background="@color/fui_transparent"
+        android:contentDescription="@string/add_location"
         android:onClick="onPickLocationFromMap"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/venue_et"
-        android:contentDescription="@string/add_location" />
+        app:layout_constraintTop_toBottomOf="@+id/venue_til"
+        app:srcCompat="@drawable/map_marker_plus" />
 
 </android.support.constraint.ConstraintLayout>
