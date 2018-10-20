@@ -2,10 +2,12 @@ package net.tirgan.mex.ui.venue;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
@@ -21,10 +23,12 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.RatingBar;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import com.esafirm.imagepicker.features.ImagePicker;
@@ -104,8 +108,46 @@ public class VenueActivity extends AppCompatActivity {
             supportPostponeEnterTransition();
         }
 
-
         ButterKnife.bind(this);
+
+        mVenueImageView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Picasso.get()
+                        .load(mVenue.getImageUrl())
+                        .into(new Target() {
+                            @Override
+                            public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
+                                Uri imageUri = MiscUtils.getImageUri(getApplicationContext(), bitmap);
+                                final ImageView imageView = new ImageView(getApplicationContext());
+                                imageView.setImageURI(imageUri);
+                                Dialog dialog = new Dialog(VenueActivity.this);
+                                dialog.getWindow().requestFeature(Window.FEATURE_NO_TITLE);
+                                dialog.getWindow().setBackgroundDrawable(
+                                        new ColorDrawable(android.graphics.Color.TRANSPARENT));
+                                dialog.addContentView(imageView, new RelativeLayout.LayoutParams(
+                                        ViewGroup.LayoutParams.MATCH_PARENT,
+                                        ViewGroup.LayoutParams.MATCH_PARENT));
+                                imageView.getLayoutParams().height = ViewGroup.LayoutParams.MATCH_PARENT;
+                                imageView.getLayoutParams().width = ViewGroup.LayoutParams.MATCH_PARENT;
+                                imageView.setAdjustViewBounds(true);
+                                imageView.setScaleType(ImageView.ScaleType.FIT_XY);
+                                dialog.show();
+                            }
+
+                            @Override
+                            public void onBitmapFailed(Exception e, Drawable errorDrawable) {
+
+                            }
+
+                            @Override
+                            public void onPrepareLoad(Drawable placeHolderDrawable) {
+
+                            }
+                        });
+            }
+        });
+
 
         // Obtain the shared Tracker instance.
         MyFirebaseApp application = (MyFirebaseApp) getApplication();
@@ -215,8 +257,8 @@ public class VenueActivity extends AppCompatActivity {
                                                 entriesDatabaseReference.child(dataSnapshot.getKey()).removeValue();
                                             }
                                         }
-                                        if (mVenue.getImageUri() != null && !mVenue.getImageUri().isEmpty()) {
-                                            FirebaseStorage.getInstance().getReferenceFromUrl(mVenue.getImageUri()).delete();
+                                        if (mVenue.getImageUrl() != null && !mVenue.getImageUrl().isEmpty()) {
+                                            FirebaseStorage.getInstance().getReferenceFromUrl(mVenue.getImageUrl()).delete();
                                         }
                                         mVenuesDatabaseReference.removeValue();
                                         finish();
@@ -242,10 +284,10 @@ public class VenueActivity extends AppCompatActivity {
                 startActivity(intent);
                 break;
             case SettingsUtil.MENU_ITEM_SHARE:
-                if (mVenue.getImageUri() != null && !mVenue.getImageUri().isEmpty()) {
+                if (mVenue.getImageUrl() != null && !mVenue.getImageUrl().isEmpty()) {
                     AnalyticsUtils.sendScreenImageName(mTracker, VenueActivity.class.getSimpleName() + "-share");
                     Picasso.get()
-                            .load(mVenue.getImageUri())
+                            .load(mVenue.getImageUrl())
                             .into(new Target() {
                                 @Override
                                 public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
@@ -290,7 +332,7 @@ public class VenueActivity extends AppCompatActivity {
             public void onDataChange(@NonNull DataSnapshot aDataSnapshot) {
                 mVenue = aDataSnapshot.getValue(Venue.class);
                 if (mVenue != null) {
-                    if (mVenue.getImageUri() != null && !mVenue.getImageUri().isEmpty()) {
+                    if (mVenue.getImageUrl() != null && !mVenue.getImageUrl().isEmpty()) {
                         if (MiscUtils.LOLLIPOP_AND_HIGHER) {
                             mVenueImageView.setTransitionName(getString(R.string.shared_element_venue_image_view));
                         }
@@ -313,7 +355,7 @@ public class VenueActivity extends AppCompatActivity {
 
                             }
                         };
-                        Picasso.get().load(mVenue.getImageUri()).into(target);
+                        Picasso.get().load(mVenue.getImageUrl()).into(target);
                         mVenueImageView.setTag(target);
                     } else {
                         Picasso.get()
@@ -383,8 +425,8 @@ public class VenueActivity extends AppCompatActivity {
             Uri selectedImageUri = MiscUtils.getImageUri(this, image);
             Log.d(VenueActivity.class.getSimpleName(), "ZZZZZ: " + selectedImageUri + "");
             mVenueImageView.setImageURI(selectedImageUri);
-            if (mVenue.getImageUri() != null && !mVenue.getImageUri().isEmpty()) {
-                mFirebaseStorage.getReferenceFromUrl(mVenue.getImageUri()).delete();
+            if (mVenue.getImageUrl() != null && !mVenue.getImageUrl().isEmpty()) {
+                mFirebaseStorage.getReferenceFromUrl(mVenue.getImageUrl()).delete();
             }
             final StorageReference photoRef = mStorageReference.child(selectedImageUri.getLastPathSegment());
             UploadTask uploadTask = photoRef.putFile(selectedImageUri);
@@ -404,7 +446,7 @@ public class VenueActivity extends AppCompatActivity {
                     if (aTask.isSuccessful()) {
                         // When the image has successfully uploaded, we get its download URL
                         Uri downloadUri = aTask.getResult();
-                        mVenue.setImageUri(downloadUri.toString());
+                        mVenue.setImageUrl(downloadUri.toString());
                         mVenuesDatabaseReference.setValue(mVenue);
                     } else {
                         // Handle failures

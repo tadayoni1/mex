@@ -6,7 +6,7 @@ import android.os.Parcelable;
 public class Venue implements Parcelable{
 
     private String mName;
-    private String mImageUri;
+    private String mImageUrl;
     private float mRating;
     private double lat;
     private double lon;
@@ -16,7 +16,7 @@ public class Venue implements Parcelable{
 
     public Venue(String aName, String aImageUri, float aRating, double aLat, double aLon) {
         mName = aName;
-        mImageUri = aImageUri;
+        mImageUrl = aImageUri;
         mRating = aRating;
         lat = aLat;
         lon = aLon;
@@ -24,7 +24,7 @@ public class Venue implements Parcelable{
 
     protected Venue(Parcel in) {
         mName = in.readString();
-        mImageUri = in.readString();
+        mImageUrl = in.readString();
         mRating = in.readFloat();
         lat = in.readDouble();
         lon = in.readDouble();
@@ -50,12 +50,12 @@ public class Venue implements Parcelable{
         mName = aName;
     }
 
-    public String getImageUri() {
-        return mImageUri;
+    public String getImageUrl() {
+        return mImageUrl;
     }
 
-    public void setImageUri(String aImageUri) {
-        mImageUri = aImageUri;
+    public void setImageUrl(String aImageUrl) {
+        mImageUrl = aImageUrl;
     }
 
     public float getRating() {
@@ -90,7 +90,7 @@ public class Venue implements Parcelable{
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeString(mName);
-        dest.writeString(mImageUri);
+        dest.writeString(mImageUrl);
         dest.writeFloat(mRating);
         dest.writeDouble(lat);
         dest.writeDouble(lon);

@@ -1,10 +1,12 @@
 package net.tirgan.mex.ui.detail;
 
 import android.Manifest;
+import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
@@ -20,12 +22,14 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.RatingBar;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import com.esafirm.imagepicker.features.ImagePicker;
@@ -119,6 +123,45 @@ public class DetailActivity extends AppCompatActivity {
         }
 
         ButterKnife.bind(this);
+
+        mDetailImageView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Picasso.get()
+                        .load(mMexEntry.getImageUrl())
+                        .into(new Target() {
+                            @Override
+                            public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
+                                Uri imageUri = MiscUtils.getImageUri(getApplicationContext(), bitmap);
+                                final ImageView imageView = new ImageView(getApplicationContext());
+                                imageView.setImageURI(imageUri);
+                                Dialog dialog = new Dialog(DetailActivity.this);
+                                dialog.getWindow().requestFeature(Window.FEATURE_NO_TITLE);
+                                dialog.getWindow().setBackgroundDrawable(
+                                        new ColorDrawable(android.graphics.Color.TRANSPARENT));
+                                dialog.addContentView(imageView, new RelativeLayout.LayoutParams(
+                                        ViewGroup.LayoutParams.MATCH_PARENT,
+                                        ViewGroup.LayoutParams.MATCH_PARENT));
+                                imageView.getLayoutParams().height = ViewGroup.LayoutParams.MATCH_PARENT;
+                                imageView.getLayoutParams().width = ViewGroup.LayoutParams.MATCH_PARENT;
+                                imageView.setAdjustViewBounds(true);
+                                imageView.setScaleType(ImageView.ScaleType.FIT_XY);
+                                dialog.show();
+                            }
+
+                            @Override
+                            public void onBitmapFailed(Exception e, Drawable errorDrawable) {
+
+                            }
+
+                            @Override
+                            public void onPrepareLoad(Drawable placeHolderDrawable) {
+
+                            }
+                        });
+            }
+        });
+
 
         // Obtain the shared Tracker instance.
         MyFirebaseApp application = (MyFirebaseApp) getApplication();
@@ -446,7 +489,7 @@ public class DetailActivity extends AppCompatActivity {
 //                case RC_IMAGE_CAPTURE_MEX_ENTRY:
 //                    if (resultCode == RESULT_OK) {
 //                        Bitmap bitmap = (Bitmap) data.getExtras().get("data");
-//                        Uri selectedImageUri = MiscUtils.getImageUri(this, bitmap);
+//                        Uri selectedImageUri = MiscUtils.getImageUrl(this, bitmap);
 //                        mDetailImageView.setImageBitmap(bitmap);
 //                        if (mMexEntry.getImageUrl() != null && !mMexEntry.getImageUrl().isEmpty()) {
 //                            mFirebaseStorage.getReferenceFromUrl(mMexEntry.getImageUrl()).delete();

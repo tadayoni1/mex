@@ -118,9 +118,9 @@ public class VenuesAdapter
     public void onBindViewHolder(@NonNull final VenuesAdapterViewHolder holder, final int position) {
         Pair<Venue, String> venuePair = mVenuePairsFiltered.get(position);
         // if venue has a picture then load the picture, otherwise create a round placeholder
-        if (venuePair.first.getImageUri() != null && !venuePair.first.getImageUri().isEmpty()) {
+        if (venuePair.first.getImageUrl() != null && !venuePair.first.getImageUrl().isEmpty()) {
             Picasso.get()
-                    .load(venuePair.first.getImageUri())
+                    .load(venuePair.first.getImageUrl())
                     .into(holder.mVenueImageView);
         } else {
             ColorGenerator generator = ColorGenerator.MATERIAL;
@@ -226,7 +226,7 @@ public class VenuesAdapter
         public void onClick(View v) {
             int adapterPosition = getAdapterPosition();
             // if venue has a picture then pass v to open Venue activity with an animation, otherwise pass null to skip animation
-            if (mVenuePairsFiltered.get(adapterPosition).first.getImageUri() != null && !mVenuePairsFiltered.get(adapterPosition).first.getImageUri().isEmpty()) {
+            if (mVenuePairsFiltered.get(adapterPosition).first.getImageUrl() != null && !mVenuePairsFiltered.get(adapterPosition).first.getImageUrl().isEmpty()) {
                 mClickHandler.onVenueImageClick(mVenuePairsFiltered.get(adapterPosition).second, v);
             } else {
                 mClickHandler.onVenueImageClick(mVenuePairsFiltered.get(adapterPosition).second, null);
