@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
 import android.provider.MediaStore;
@@ -11,10 +12,14 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.util.Pair;
 
+import com.esafirm.imagepicker.model.Image;
+
 import net.tirgan.mex.model.Venue;
 import net.tirgan.mex.ui.main.VenuesAdapter;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -28,6 +33,22 @@ public class MiscUtils {
         aBitmap.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
         String path = MediaStore.Images.Media.insertImage(aContext.getContentResolver(), aBitmap, null, null);
         return Uri.parse(path);
+    }
+
+    public static Uri getImageUri(Context aContext, Image aImage) {
+        File file = new File(aImage.getPath());
+        Bitmap bitmap = null;
+        try {
+            bitmap = MediaStore.Images.Media.getBitmap(aContext.getContentResolver(), Uri.fromFile(file));
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 25, outputStream);
+            byte[] byteArray = outputStream.toByteArray();
+            Bitmap compressedBitmap = BitmapFactory.decodeByteArray(byteArray,0,byteArray.length);
+            return getImageUri(aContext, compressedBitmap);
+        } catch (IOException aE) {
+            aE.printStackTrace();
+        }
+        return null;
     }
 
     public static boolean checkPermissionsAndRequest(String[] aPermissions, int aPermissionRequestId, Context aContext) {

@@ -44,10 +44,12 @@
             />
 
         <com.getbase.floatingactionbutton.FloatingActionsMenu
+            android:id="@+id/fragment_list_fam"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="end|bottom"
-            android:layout_margin="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginRight="16dp"
             android:contentDescription="@string/cd_add_new_venue_or_entry"
             fab:fab_addButtonColorNormal="@color/colorAccent"
             fab:fab_addButtonColorPressed="@color/colorAccentPressed"

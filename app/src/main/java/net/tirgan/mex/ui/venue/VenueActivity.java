@@ -10,7 +10,6 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -18,6 +17,7 @@ import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.transition.Fade;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -27,6 +27,9 @@ import android.widget.ImageView;
 import android.widget.RatingBar;
 import android.widget.Toast;
 
+import com.esafirm.imagepicker.features.ImagePicker;
+import com.esafirm.imagepicker.features.ReturnMode;
+import com.esafirm.imagepicker.model.Image;
 import com.google.android.gms.analytics.Tracker;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.tasks.Continuation;
@@ -50,6 +53,7 @@ import net.tirgan.mex.model.MexEntry;
 import net.tirgan.mex.model.Venue;
 import net.tirgan.mex.ui.settings.SettingsActivity;
 import net.tirgan.mex.utilities.AnalyticsUtils;
+import net.tirgan.mex.utilities.FirebaseUtils;
 import net.tirgan.mex.utilities.MiscUtils;
 import net.tirgan.mex.utilities.SettingsUtil;
 
@@ -211,7 +215,9 @@ public class VenueActivity extends AppCompatActivity {
                                                 entriesDatabaseReference.child(dataSnapshot.getKey()).removeValue();
                                             }
                                         }
-                                        FirebaseStorage.getInstance().getReferenceFromUrl(mVenue.getImageUri()).delete();
+                                        if (mVenue.getImageUri() != null && !mVenue.getImageUri().isEmpty()) {
+                                            FirebaseStorage.getInstance().getReferenceFromUrl(mVenue.getImageUri()).delete();
+                                        }
                                         mVenuesDatabaseReference.removeValue();
                                         finish();
                                     }
@@ -236,29 +242,33 @@ public class VenueActivity extends AppCompatActivity {
                 startActivity(intent);
                 break;
             case SettingsUtil.MENU_ITEM_SHARE:
-                AnalyticsUtils.sendScreenImageName(mTracker, VenueActivity.class.getSimpleName() + "-share");
-                Picasso.get()
-                        .load(mVenue.getImageUri())
-                        .into(new Target() {
-                            @Override
-                            public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
-                                Intent shareIntent = new Intent();
-                                shareIntent.setAction(Intent.ACTION_SEND);
-                                shareIntent.putExtra(Intent.EXTRA_STREAM, MiscUtils.getImageUri(getApplicationContext(), bitmap));
-                                shareIntent.setType("image/jpeg");
-                                startActivity(Intent.createChooser(shareIntent, getString(R.string.send_to)));
-                            }
+                if (mVenue.getImageUri() != null && !mVenue.getImageUri().isEmpty()) {
+                    AnalyticsUtils.sendScreenImageName(mTracker, VenueActivity.class.getSimpleName() + "-share");
+                    Picasso.get()
+                            .load(mVenue.getImageUri())
+                            .into(new Target() {
+                                @Override
+                                public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
+                                    Intent shareIntent = new Intent();
+                                    shareIntent.setAction(Intent.ACTION_SEND);
+                                    shareIntent.putExtra(Intent.EXTRA_STREAM, MiscUtils.getImageUri(getApplicationContext(), bitmap));
+                                    shareIntent.setType("image/jpeg");
+                                    startActivity(Intent.createChooser(shareIntent, getString(R.string.send_to)));
+                                }
 
-                            @Override
-                            public void onBitmapFailed(Exception e, Drawable errorDrawable) {
-                                Toast.makeText(getApplication(), getString(R.string.failed_to_download), Toast.LENGTH_SHORT).show();
-                            }
+                                @Override
+                                public void onBitmapFailed(Exception e, Drawable errorDrawable) {
+                                    Toast.makeText(getApplication(), getString(R.string.failed_to_download), Toast.LENGTH_SHORT).show();
+                                }
 
-                            @Override
-                            public void onPrepareLoad(Drawable placeHolderDrawable) {
+                                @Override
+                                public void onPrepareLoad(Drawable placeHolderDrawable) {
 
-                            }
-                        });
+                                }
+                            });
+                } else {
+                    Toast.makeText(this, getString(R.string.no_venue_image), Toast.LENGTH_SHORT).show();
+                }
                 break;
         }
         return true;
@@ -284,7 +294,7 @@ public class VenueActivity extends AppCompatActivity {
                         if (MiscUtils.LOLLIPOP_AND_HIGHER) {
                             mVenueImageView.setTransitionName(getString(R.string.shared_element_venue_image_view));
                         }
-                        Picasso.get().load(mVenue.getImageUri()).into(new Target() {
+                        Target target = new Target() {
                             @Override
                             public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
                                 mVenueImageView.setImageBitmap(bitmap);
@@ -302,7 +312,13 @@ public class VenueActivity extends AppCompatActivity {
                             public void onPrepareLoad(Drawable placeHolderDrawable) {
 
                             }
-                        });
+                        };
+                        Picasso.get().load(mVenue.getImageUri()).into(target);
+                        mVenueImageView.setTag(target);
+                    } else {
+                        Picasso.get()
+                                .load(FirebaseUtils.VENUE_DEFAULT_IMAGE_DOWNLOAD_URL)
+                                .into(mVenueImageView);
                     }
                     mEditText.setText(mVenue.getName());
                     mRatingBar.setRating(mVenue.getRating());
@@ -331,12 +347,10 @@ public class VenueActivity extends AppCompatActivity {
 
     private void dispatchCameraIntent(int aPermissionRequestId) {
         if (MiscUtils.checkPermissionsAndRequest(new String[]{Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE}, aPermissionRequestId, this)) {
-            Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-            takePictureIntent.putExtra("return-data", true);
-            if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
-                startActivityForResult(takePictureIntent, aPermissionRequestId);
-                AnalyticsUtils.sendScreenImageName(mTracker, VenueActivity.class.getSimpleName() + "-take-picture-intent");
-            }
+            ImagePicker.create(this) // Activity or Fragment
+                    .returnMode(ReturnMode.ALL)
+                    .single()
+                    .start();
         }
     }
 
@@ -364,50 +378,51 @@ public class VenueActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        switch (requestCode) {
-            case RC_IMAGE_CAPTURE_VENUE:
-                if (resultCode == RESULT_OK) {
-                    Bitmap bitmap = (Bitmap) data.getExtras().get("data");
-                    Uri selectedImageUri = MiscUtils.getImageUri(this, bitmap);
-                    mVenueImageView.setImageBitmap(bitmap);
-                    if (mVenue.getImageUri() != null && !mVenue.getImageUri().isEmpty()) {
-                        mFirebaseStorage.getReferenceFromUrl(mVenue.getImageUri()).delete();
+        if (ImagePicker.shouldHandle(requestCode, resultCode, data)) {
+            Image image = ImagePicker.getFirstImageOrNull(data);
+            Uri selectedImageUri = MiscUtils.getImageUri(this, image);
+            Log.d(VenueActivity.class.getSimpleName(), "ZZZZZ: " + selectedImageUri + "");
+            mVenueImageView.setImageURI(selectedImageUri);
+            if (mVenue.getImageUri() != null && !mVenue.getImageUri().isEmpty()) {
+                mFirebaseStorage.getReferenceFromUrl(mVenue.getImageUri()).delete();
+            }
+            final StorageReference photoRef = mStorageReference.child(selectedImageUri.getLastPathSegment());
+            UploadTask uploadTask = photoRef.putFile(selectedImageUri);
+            Task<Uri> urlTask = uploadTask.continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
+                @Override
+                public Task<Uri> then(@NonNull Task<UploadTask.TaskSnapshot> aTask) throws Exception {
+                    if (!aTask.isSuccessful()) {
+                        throw aTask.getException();
                     }
-                    final StorageReference photoRef = mStorageReference.child(selectedImageUri.getLastPathSegment());
-                    UploadTask uploadTask = photoRef.putFile(selectedImageUri);
-                    Task<Uri> urlTask = uploadTask.continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
-                        @Override
-                        public Task<Uri> then(@NonNull Task<UploadTask.TaskSnapshot> aTask) throws Exception {
-                            if (!aTask.isSuccessful()) {
-                                throw aTask.getException();
-                            }
 
-                            // Continue with the task to get the download URL
-                            return photoRef.getDownloadUrl();
-                        }
-                    }).addOnCompleteListener(new OnCompleteListener<Uri>() {
-                        @Override
-                        public void onComplete(@NonNull Task<Uri> aTask) {
-                            if (aTask.isSuccessful()) {
-                                // When the image has successfully uploaded, we get its download URL
-                                Uri downloadUri = aTask.getResult();
-                                mVenue.setImageUri(downloadUri.toString());
-                                mVenuesDatabaseReference.setValue(mVenue);
-                            } else {
-                                // Handle failures
-                                // ...
-                            }
-                        }
-                    });
+                    // Continue with the task to get the download URL
+                    return photoRef.getDownloadUrl();
                 }
-                break;
-            case PICK_MAP_POINT_REQUEST:
-                if (resultCode == RESULT_OK) {
-                    LatLng latLng = data.getParcelableExtra(MapsActivity.RETURN_INTENT_EXTRA_PICKED_POINT);
-                    mVenue.setLat(latLng.latitude);
-                    mVenue.setLon(latLng.longitude);
-                    mVenuesDatabaseReference.setValue(mVenue);
+            }).addOnCompleteListener(new OnCompleteListener<Uri>() {
+                @Override
+                public void onComplete(@NonNull Task<Uri> aTask) {
+                    if (aTask.isSuccessful()) {
+                        // When the image has successfully uploaded, we get its download URL
+                        Uri downloadUri = aTask.getResult();
+                        mVenue.setImageUri(downloadUri.toString());
+                        mVenuesDatabaseReference.setValue(mVenue);
+                    } else {
+                        // Handle failures
+                        // ...
+                    }
                 }
+            });
+
+        } else {
+            switch (requestCode) {
+                case PICK_MAP_POINT_REQUEST:
+                    if (resultCode == RESULT_OK) {
+                        LatLng latLng = data.getParcelableExtra(MapsActivity.RETURN_INTENT_EXTRA_PICKED_POINT);
+                        mVenue.setLat(latLng.latitude);
+                        mVenue.setLon(latLng.longitude);
+                        mVenuesDatabaseReference.setValue(mVenue);
+                    }
+            }
         }
     }
 

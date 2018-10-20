@@ -9,7 +9,6 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -17,6 +16,7 @@ import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.transition.Fade;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -26,9 +26,11 @@ import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.RatingBar;
-import android.widget.Spinner;
 import android.widget.Toast;
 
+import com.esafirm.imagepicker.features.ImagePicker;
+import com.esafirm.imagepicker.features.ReturnMode;
+import com.esafirm.imagepicker.model.Image;
 import com.google.android.gms.analytics.Tracker;
 import com.google.android.gms.tasks.Continuation;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -44,6 +46,7 @@ import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Target;
+import com.toptoche.searchablespinnerlibrary.SearchableSpinner;
 
 import net.tirgan.mex.MyFirebaseApp;
 import net.tirgan.mex.R;
@@ -51,6 +54,7 @@ import net.tirgan.mex.model.MexEntry;
 import net.tirgan.mex.model.Venue;
 import net.tirgan.mex.model.Venues;
 import net.tirgan.mex.ui.settings.SettingsActivity;
+import net.tirgan.mex.ui.venue.VenueActivity;
 import net.tirgan.mex.utilities.AnalyticsUtils;
 import net.tirgan.mex.utilities.MiscUtils;
 import net.tirgan.mex.utilities.SettingsUtil;
@@ -83,7 +87,7 @@ public class DetailActivity extends AppCompatActivity {
     EditText mDetailPriceEditText;
 
     @BindView(R.id.detail_venue_spinner)
-    Spinner mVenueSpinner;
+    SearchableSpinner mVenueSpinner;
 
     private DatabaseReference mDetailDatabaseReference;
     private DatabaseReference mVenuesDatabaseReference;
@@ -95,6 +99,8 @@ public class DetailActivity extends AppCompatActivity {
     private MexEntry mMexEntry;
     private String mKey;
     private Tracker mTracker;
+
+    private List<Venues> mVenues;
 
 
     @Override
@@ -275,19 +281,20 @@ public class DetailActivity extends AppCompatActivity {
     }
 
     private void initializeVenuesSpinner() {
-        final List<Venues> venues = new ArrayList<>();
+        mVenueSpinner.setTitle(getString(R.string.select_restaurant));
+        mVenues = new ArrayList<>();
         mVenuesDatabaseReference.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot aDataSnapshot) {
                 for (DataSnapshot dataSnapshot : aDataSnapshot.getChildren()) {
                     Venue venue = dataSnapshot.getValue(Venue.class);
-                    venues.add(new Venues(dataSnapshot.getKey(), venue.getName()));
+                    mVenues.add(new Venues(dataSnapshot.getKey(), venue.getName()));
                 }
-                ArrayAdapter<Venues> spinnerArrayAdapter = new ArrayAdapter<>(getBaseContext(), android.R.layout.simple_spinner_item, venues);
+                ArrayAdapter<Venues> spinnerArrayAdapter = new ArrayAdapter<>(getBaseContext(), android.R.layout.simple_spinner_item, mVenues);
                 mVenueSpinner.setAdapter(spinnerArrayAdapter);
                 int currentVenue = -1;
                 if (mMexEntry != null) {
-                    currentVenue = Venues.getPositionOfKey(venues, mMexEntry.getVenueKey());
+                    currentVenue = Venues.getPositionOfKey(mVenues, mMexEntry.getVenueKey());
                 }
                 mVenueSpinner.setSelection(currentVenue);
                 mVenueSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -321,7 +328,7 @@ public class DetailActivity extends AppCompatActivity {
                     if (MiscUtils.LOLLIPOP_AND_HIGHER) {
                         mDetailImageView.setTransitionName(getString(R.string.shared_element_mex_entry_image_view));
                     }
-                    Picasso.get().load(mMexEntry.getImageUrl()).into(new Target() {
+                    final Target target = new Target() {
                         @Override
                         public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
                             mDetailImageView.setImageBitmap(bitmap);
@@ -332,14 +339,16 @@ public class DetailActivity extends AppCompatActivity {
 
                         @Override
                         public void onBitmapFailed(Exception e, Drawable errorDrawable) {
-
+                            supportStartPostponedEnterTransition();
                         }
 
                         @Override
                         public void onPrepareLoad(Drawable placeHolderDrawable) {
 
                         }
-                    });
+                    };
+                    Picasso.get().load(mMexEntry.getImageUrl()).into(target);
+                    mDetailImageView.setTag(target);
                 }
                 mDetailEditText.setText(mMexEntry.getName());
                 mDetailPriceEditText.setText(String.valueOf(mMexEntry.getPrice()));
@@ -365,12 +374,10 @@ public class DetailActivity extends AppCompatActivity {
 
     private void dispatchCameraIntent(int aPermissionRequestId) {
         if (MiscUtils.checkPermissionsAndRequest(new String[]{Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE}, aPermissionRequestId, this)) {
-            Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-            takePictureIntent.putExtra("return-data", true);
-            if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
-                startActivityForResult(takePictureIntent, aPermissionRequestId);
-                AnalyticsUtils.sendScreenImageName(mTracker, DetailActivity.class.getSimpleName() + "-take-picture-intent");
-            }
+            ImagePicker.create(this) // Activity or Fragment
+                    .returnMode(ReturnMode.ALL)
+                    .single()
+                    .start();
         }
     }
 
@@ -398,44 +405,81 @@ public class DetailActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        switch (requestCode) {
-            case RC_IMAGE_CAPTURE_MEX_ENTRY:
-                if (resultCode == RESULT_OK) {
-                    Bitmap bitmap = (Bitmap) data.getExtras().get("data");
-                    Uri selectedImageUri = MiscUtils.getImageUri(this, bitmap);
-                    mDetailImageView.setImageBitmap(bitmap);
-                    if (mMexEntry.getImageUrl() != null && !mMexEntry.getImageUrl().isEmpty()) {
-                        mFirebaseStorage.getReferenceFromUrl(mMexEntry.getImageUrl()).delete();
+        if (ImagePicker.shouldHandle(requestCode, resultCode, data)) {
+            Image image = ImagePicker.getFirstImageOrNull(data);
+            Uri selectedImageUri = MiscUtils.getImageUri(this, image);
+            Log.d(VenueActivity.class.getSimpleName(), "ZZZZZ: " + selectedImageUri + "");
+            mDetailImageView.setImageURI(selectedImageUri);
+            if (mMexEntry.getImageUrl() != null && !mMexEntry.getImageUrl().isEmpty()) {
+                mFirebaseStorage.getReferenceFromUrl(mMexEntry.getImageUrl()).delete();
+            }
+            final StorageReference photoRef = mStorageReference.child(selectedImageUri.getLastPathSegment());
+            UploadTask uploadTask = photoRef.putFile(selectedImageUri);
+            Task<Uri> urlTask = uploadTask.continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
+                @Override
+                public Task<Uri> then(@NonNull Task<UploadTask.TaskSnapshot> aTask) throws Exception {
+                    if (!aTask.isSuccessful()) {
+                        throw aTask.getException();
                     }
-                    final StorageReference photoRef = mStorageReference.child(selectedImageUri.getLastPathSegment());
-                    UploadTask uploadTask = photoRef.putFile(selectedImageUri);
-                    Task<Uri> urlTask = uploadTask.continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
-                        @Override
-                        public Task<Uri> then(@NonNull Task<UploadTask.TaskSnapshot> aTask) throws Exception {
-                            if (!aTask.isSuccessful()) {
-                                throw aTask.getException();
-                            }
 
-                            // Continue with the task to get the download URL
-                            return photoRef.getDownloadUrl();
-                        }
-                    }).addOnCompleteListener(new OnCompleteListener<Uri>() {
-                        @Override
-                        public void onComplete(@NonNull Task<Uri> aTask) {
-                            if (aTask.isSuccessful()) {
-                                // When the image has successfully uploaded, we get its download URL
-                                Uri downloadUri = aTask.getResult();
-                                mMexEntry.setImageUrl(downloadUri.toString());
-                                mDetailDatabaseReference.setValue(mMexEntry);
-                            } else {
-                                // Handle failures
-                                // ...
-                            }
-                        }
-                    });
+                    // Continue with the task to get the download URL
+                    return photoRef.getDownloadUrl();
                 }
-                break;
-        }
-    }
+            }).addOnCompleteListener(new OnCompleteListener<Uri>() {
+                @Override
+                public void onComplete(@NonNull Task<Uri> aTask) {
+                    if (aTask.isSuccessful()) {
+                        // When the image has successfully uploaded, we get its download URL
+                        Uri downloadUri = aTask.getResult();
+                        mMexEntry.setImageUrl(downloadUri.toString());
+                        mDetailDatabaseReference.setValue(mMexEntry);
+                    } else {
+                        // Handle failures
+                        // ...
+                    }
+                }
+            });
 
+        }
+// else {
+//            switch (requestCode) {
+//                case RC_IMAGE_CAPTURE_MEX_ENTRY:
+//                    if (resultCode == RESULT_OK) {
+//                        Bitmap bitmap = (Bitmap) data.getExtras().get("data");
+//                        Uri selectedImageUri = MiscUtils.getImageUri(this, bitmap);
+//                        mDetailImageView.setImageBitmap(bitmap);
+//                        if (mMexEntry.getImageUrl() != null && !mMexEntry.getImageUrl().isEmpty()) {
+//                            mFirebaseStorage.getReferenceFromUrl(mMexEntry.getImageUrl()).delete();
+//                        }
+//                        final StorageReference photoRef = mStorageReference.child(selectedImageUri.getLastPathSegment());
+//                        UploadTask uploadTask = photoRef.putFile(selectedImageUri);
+//                        Task<Uri> urlTask = uploadTask.continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
+//                            @Override
+//                            public Task<Uri> then(@NonNull Task<UploadTask.TaskSnapshot> aTask) throws Exception {
+//                                if (!aTask.isSuccessful()) {
+//                                    throw aTask.getException();
+//                                }
+//
+//                                // Continue with the task to get the download URL
+//                                return photoRef.getDownloadUrl();
+//                            }
+//                        }).addOnCompleteListener(new OnCompleteListener<Uri>() {
+//                            @Override
+//                            public void onComplete(@NonNull Task<Uri> aTask) {
+//                                if (aTask.isSuccessful()) {
+//                                    // When the image has successfully uploaded, we get its download URL
+//                                    Uri downloadUri = aTask.getResult();
+//                                    mMexEntry.setImageUrl(downloadUri.toString());
+//                                    mDetailDatabaseReference.setValue(mMexEntry);
+//                                } else {
+//                                    // Handle failures
+//                                    // ...
+//                                }
+//                            }
+//                        });
+//                    }
+//                    break;
+//            }
+        //   }
+    }
 }

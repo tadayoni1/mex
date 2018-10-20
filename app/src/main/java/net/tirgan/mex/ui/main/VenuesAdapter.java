@@ -15,6 +15,8 @@ import android.widget.ImageView;
 import android.widget.RatingBar;
 import android.widget.TextView;
 
+import com.amulyakhare.textdrawable.TextDrawable;
+import com.amulyakhare.textdrawable.util.ColorGenerator;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -53,13 +55,18 @@ public class VenuesAdapter
     }
 
     private final VenuesAdapterOnClickHandler mClickHandler;
+    private final VenuesAdapterListener mVenuesAdapterListener;
 
     public interface VenuesAdapterOnClickHandler {
         void onVenueImageClick(String key, View aView);
     }
 
+    public interface VenuesAdapterListener {
+        void isAnyVenueAdded(boolean aIsAnyVenueAdded);
+    }
 
-    public VenuesAdapter(Context aContext, VenuesAdapterOnClickHandler aClickHandler) {
+
+    public VenuesAdapter(Context aContext, VenuesAdapterOnClickHandler aClickHandler, VenuesAdapterListener aVenuesAdapterListener) {
         mContext = aContext;
         FirebaseDatabase database = FirebaseDatabase.getInstance();
         String userId = FirebaseAuth.getInstance().getUid();
@@ -69,6 +76,7 @@ public class VenuesAdapter
                 .child(mContext.getString(R.string.venues_database));
         reloadData();
         mClickHandler = aClickHandler;
+        mVenuesAdapterListener = aVenuesAdapterListener;
 
         mFilterByMinRating = 0;
         mSortBy = 1;
@@ -82,6 +90,7 @@ public class VenuesAdapter
                     String key = dataSnapshot.getKey();
                     mVenuePairs.add(new Pair<>(venue, key));
                 }
+                mVenuesAdapterListener.isAnyVenueAdded(mVenuePairs.size() > 0);
                 mVenuePairsFiltered = mVenuePairs;
                 notifyDataSetChanged();
             }
@@ -108,10 +117,22 @@ public class VenuesAdapter
     @Override
     public void onBindViewHolder(@NonNull final VenuesAdapterViewHolder holder, final int position) {
         Pair<Venue, String> venuePair = mVenuePairsFiltered.get(position);
+        // if venue has a picture then load the picture, otherwise create a round placeholder
         if (venuePair.first.getImageUri() != null && !venuePair.first.getImageUri().isEmpty()) {
             Picasso.get()
                     .load(venuePair.first.getImageUri())
                     .into(holder.mVenueImageView);
+        } else {
+            ColorGenerator generator = ColorGenerator.MATERIAL;
+            String letter;
+            if (venuePair.first.getName() != null && !venuePair.first.getName().isEmpty()) {
+                letter = String.valueOf(venuePair.first.getName().charAt(0));
+            } else {
+                letter = mContext.getString(R.string.default_venue_initial);
+            }
+            TextDrawable drawable = TextDrawable.builder()
+                    .buildRound(letter, generator.getRandomColor());
+            holder.mVenueImageView.setImageDrawable(drawable);
         }
         holder.mVenueTextView.setText(venuePair.first.getName());
         holder.mVenueRatingBar.setRating(venuePair.first.getRating());
@@ -204,7 +225,12 @@ public class VenuesAdapter
         @Override
         public void onClick(View v) {
             int adapterPosition = getAdapterPosition();
-            mClickHandler.onVenueImageClick(mVenuePairsFiltered.get(adapterPosition).second, v);
+            // if venue has a picture then pass v to open Venue activity with an animation, otherwise pass null to skip animation
+            if (mVenuePairsFiltered.get(adapterPosition).first.getImageUri() != null && !mVenuePairsFiltered.get(adapterPosition).first.getImageUri().isEmpty()) {
+                mClickHandler.onVenueImageClick(mVenuePairsFiltered.get(adapterPosition).second, v);
+            } else {
+                mClickHandler.onVenueImageClick(mVenuePairsFiltered.get(adapterPosition).second, null);
+            }
         }
     }
 }

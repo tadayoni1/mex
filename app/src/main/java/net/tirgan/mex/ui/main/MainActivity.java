@@ -1,6 +1,7 @@
 package net.tirgan.mex.ui.main;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.ActivityOptions;
 import android.content.Intent;
@@ -16,15 +17,15 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
-import android.transition.Explode;
+import android.transition.Fade;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
+import android.widget.Toast;
 
 import com.firebase.ui.auth.AuthUI;
 import com.google.android.gms.analytics.Tracker;
-import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
@@ -135,6 +136,7 @@ public class MainActivity
         }
     };
     private Tracker mTracker;
+    private boolean mIsAnyVenueAdded;
 
 
     @Override
@@ -142,9 +144,9 @@ public class MainActivity
         super.onCreate(savedInstanceState);
         if (MiscUtils.LOLLIPOP_AND_HIGHER) {
             getWindow().requestFeature(Window.FEATURE_CONTENT_TRANSITIONS);
-            Explode explode = new Explode();
-            explode.setDuration(1000);
-            getWindow().setExitTransition(explode);
+            Fade fade = new Fade();
+            fade.setDuration(1000);
+            getWindow().setExitTransition(fade);
         }
         setContentView(R.layout.activity_main);
 
@@ -293,19 +295,23 @@ public class MainActivity
     }
 
     public void onAddNewVenueClick(View view) {
-        Venue venue = new Venue("", FirebaseUtils.VENUE_DEFAULT_IMAGE_DOWNLOAD_URL, FirebaseUtils.DEFAULT_RATING, FirebaseUtils.DEFAULT_LATITUDE, FirebaseUtils.DEFAULT_LONGITUDE);
+        Venue venue = new Venue("", "", FirebaseUtils.DEFAULT_RATING, FirebaseUtils.DEFAULT_LATITUDE, FirebaseUtils.DEFAULT_LONGITUDE);
         String key = mDatabaseReference.child(getString(R.string.venues_database)).push().getKey();
         mDatabaseReference.child(getString(R.string.venues_database)).child(key).setValue(venue);
         startVenueActivity(key, null);
-
+        mListFragment.collapseFloatingActionMenu();
     }
 
     public void onAddNewEntryClick(View view) {
-        MexEntry mexEntry = new MexEntry("", "", FirebaseUtils.DEFAULT_RATING, FirebaseUtils.DEFAULT_PRICE, FirebaseUtils.MEX_ENTRY_DEFAULT_IMAGE_DOWNLOAD_URL, new Date().getTime());
-        String key = mDatabaseReference.child(getString(R.string.entries_database)).push().getKey();
-        mDatabaseReference.child(getString(R.string.entries_database)).child(key).setValue(mexEntry);
-        startDetailActivity(key);
-
+        if (mIsAnyVenueAdded) {
+            MexEntry mexEntry = new MexEntry("", "", FirebaseUtils.DEFAULT_RATING, FirebaseUtils.DEFAULT_PRICE, FirebaseUtils.MEX_ENTRY_DEFAULT_IMAGE_DOWNLOAD_URL, new Date().getTime());
+            String key = mDatabaseReference.child(getString(R.string.entries_database)).push().getKey();
+            mDatabaseReference.child(getString(R.string.entries_database)).child(key).setValue(mexEntry);
+            startDetailActivity(key);
+            mListFragment.collapseFloatingActionMenu();
+        } else {
+            Toast.makeText(this, getString(R.string.first_add_venue), Toast.LENGTH_SHORT).show();
+        }
     }
 
 
@@ -332,6 +338,7 @@ public class MainActivity
     }
 
 
+    @SuppressLint("RestrictedApi")
     private void startVenueActivity(String key, View aView) {
         Intent intent = new Intent(MainActivity.this, VenueActivity.class);
         intent.putExtra(VenueActivity.INTENT_EXTRA_FIREBASE_DATABASE_KEY, key);
@@ -368,6 +375,11 @@ public class MainActivity
     @Override
     public void onSortByImageButtonClick() {
         showSortByDialog();
+    }
+
+    @Override
+    public void isAnyVenueAdded(boolean aIsAnyVenueAdded) {
+        mIsAnyVenueAdded = aIsAnyVenueAdded;
     }
 
     private void setLocation() {

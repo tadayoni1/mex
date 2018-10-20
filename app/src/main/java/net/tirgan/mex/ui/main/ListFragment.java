@@ -13,6 +13,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
 
+import com.getbase.floatingactionbutton.FloatingActionsMenu;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
 
@@ -20,20 +21,25 @@ import net.tirgan.mex.R;
 
 public class ListFragment
         extends Fragment
-        implements VenuesAdapter.VenuesAdapterOnClickHandler {
+        implements VenuesAdapter.VenuesAdapterOnClickHandler, VenuesAdapter.VenuesAdapterListener {
 
 
     private RecyclerView mRecyclerView;
     private VenuesAdapter mVenuesAdapter;
     private SearchView mSearchView;
+    private FloatingActionsMenu mFloatingActionsMenu;
 
     private ListFragmentOnClickHandler mClickHandler;
+
 
     public interface ListFragmentOnClickHandler {
         void onVenueImageClick(String key, View aView);
 
         void onSortByImageButtonClick();
+
+        void isAnyVenueAdded(boolean aIsAnyVenueAdded);
     }
+
 
     @Override
     public void onAttach(Context context) {
@@ -45,6 +51,11 @@ public class ListFragment
             throw new ClassCastException(context.toString()
                     + " must implement ListFragmentOnClickHandler");
         }
+    }
+
+    @Override
+    public void isAnyVenueAdded(boolean aIsAnyVenueAdded) {
+        mClickHandler.isAnyVenueAdded(aIsAnyVenueAdded);
     }
 
     public ListFragment() {
@@ -60,13 +71,15 @@ public class ListFragment
         AdRequest adRequest = new AdRequest.Builder().build();
         adView.loadAd(adRequest);
 
+        mFloatingActionsMenu = rootView.findViewById(R.id.fragment_list_fam);
+
         mSearchView = rootView.findViewById(R.id.fragment_list_sv);
         ImageButton sortByImageButton = rootView.findViewById(R.id.sort_by_ib);
 
         mRecyclerView = rootView.findViewById(R.id.venues_rv);
         LinearLayoutManager layoutManager = new LinearLayoutManager(getContext());
         mRecyclerView.setLayoutManager(layoutManager);
-        mVenuesAdapter = new VenuesAdapter(getContext(), this);
+        mVenuesAdapter = new VenuesAdapter(getContext(), this, this);
         mRecyclerView.setAdapter(mVenuesAdapter);
         mVenuesAdapter.reloadData();
 
@@ -104,6 +117,10 @@ public class ListFragment
     public void setSortAndFilter(int aSortBy, float aFilterByMinRating) {
         mVenuesAdapter.setSortAndFilter(aSortBy, aFilterByMinRating);
         mVenuesAdapter.getFilter().filter(mSearchView.getQuery());
+    }
+
+    public void collapseFloatingActionMenu() {
+        mFloatingActionsMenu.collapse();
     }
 
 }
