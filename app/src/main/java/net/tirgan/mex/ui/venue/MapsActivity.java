@@ -12,6 +12,7 @@ import android.support.v4.app.FragmentActivity;
 import android.view.View;
 
 import com.google.android.gms.analytics.Tracker;
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
@@ -21,6 +22,7 @@ import com.google.android.gms.maps.model.LatLng;
 import net.tirgan.mex.MyFirebaseApp;
 import net.tirgan.mex.R;
 import net.tirgan.mex.utilities.AnalyticsUtils;
+import net.tirgan.mex.utilities.MiscUtils;
 
 public class MapsActivity
         extends FragmentActivity
@@ -31,6 +33,7 @@ public class MapsActivity
     public static final String RETURN_INTENT_EXTRA_PICKED_POINT = "return-intent-extra-picked-point";
 
     private LatLng mLatLng;
+    private LatLng mPreviousLatLng;
 
     @Override
     protected void onResume() {
@@ -45,6 +48,9 @@ public class MapsActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
+
+        Intent intentThatStartedThisActivity = getIntent();
+        mPreviousLatLng = intentThatStartedThisActivity.getParcelableExtra(VenueActivity.INTENT_EXTRA_VENUE_LOCATION);
 
         // Obtain the shared Tracker instance.
         MyFirebaseApp application = (MyFirebaseApp) getApplication();
@@ -83,6 +89,9 @@ public class MapsActivity
         googleMap.setOnMyLocationButtonClickListener(this);
         googleMap.setOnMyLocationClickListener(this);
 
+        if (mPreviousLatLng != null) {
+            googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(mPreviousLatLng, MiscUtils.getFloat(R.dimen.camera_default_zoom, getApplicationContext())));
+        }
     }
 
     @Override

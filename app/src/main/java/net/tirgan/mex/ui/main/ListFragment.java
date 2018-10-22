@@ -1,7 +1,9 @@
 package net.tirgan.mex.ui.main;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -18,6 +20,7 @@ import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
 
 import net.tirgan.mex.R;
+import net.tirgan.mex.utilities.SettingsUtil;
 
 public class ListFragment
         extends Fragment
@@ -68,8 +71,14 @@ public class ListFragment
         final View rootView = inflater.inflate(R.layout.fragment_list, container, false);
 
         AdView adView = rootView.findViewById(R.id.list_av);
-        AdRequest adRequest = new AdRequest.Builder().build();
-        adView.loadAd(adRequest);
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getContext());
+        boolean isAdEnabled = sp.getBoolean(SettingsUtil.PREF_AD_ENABLED, getContext().getResources().getBoolean(R.bool.ad_enabled_default));
+        if (isAdEnabled) {
+            AdRequest adRequest = new AdRequest.Builder().build();
+            adView.loadAd(adRequest);
+        } else {
+            adView.setVisibility(View.GONE);
+        }
 
         mFloatingActionsMenu = rootView.findViewById(R.id.fragment_list_fam);
 

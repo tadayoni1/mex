@@ -4,8 +4,10 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.ActivityOptions;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -80,7 +82,7 @@ public class MainActivity
     @BindView(R.id.navigation)
     BottomNavigationView mBottomNavigationView;
 
-    private boolean mIsEnabled;
+    private boolean mIsNotificationsEnabled;
     private Geofencing mGeofencing;
 
     private FirebaseAuth mFirebaseAuth;
@@ -109,7 +111,7 @@ public class MainActivity
     };
 
 
-    private static final long LOCATION_REFRESH_TIME = 60000;
+    private static final long LOCATION_REFRESH_TIME = 900000;
     private static final float LOCATION_REFRESH_DISTANCE = 10.0f;
     private final LocationListener mLocationListener = new LocationListener() {
         @Override
@@ -142,7 +144,7 @@ public class MainActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (MiscUtils.LOLLIPOP_AND_HIGHER) {
+        if (MiscUtils.LOLLIPOP_AND_HIGHER && getResources().getBoolean(R.bool.is_animation_enabled)) {
             getWindow().requestFeature(Window.FEATURE_CONTENT_TRANSITIONS);
             Fade fade = new Fade();
             fade.setDuration(1000);
@@ -194,9 +196,9 @@ public class MainActivity
         String userId = mFirebaseAuth.getUid();
         mDatabaseReference = mDatabase.getReference().child(getString(R.string.users_database)).child(userId);
 
-        mIsEnabled = PreferenceManager.getDefaultSharedPreferences(this).getBoolean(getString(R.string.settings_enable_notifications), false);
+        mIsNotificationsEnabled = PreferenceManager.getDefaultSharedPreferences(this).getBoolean(getString(R.string.settings_enable_notifications), false);
 
-        if (mIsEnabled) {
+        if (mIsNotificationsEnabled) {
             mGeofencing = new Geofencing(this);
             JobSchedulingUtils.scheduleGeofencingRegister(this);
         }
@@ -210,13 +212,17 @@ public class MainActivity
         LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, LOCATION_REFRESH_TIME,
+            locationManager.requestLocationUpdates(LocationManager.PASSIVE_PROVIDER, LOCATION_REFRESH_TIME,
                     LOCATION_REFRESH_DISTANCE, mLocationListener);
         }
 
         if (savedInstanceState == null) {
             mFragmentManager.beginTransaction()
                     .add(R.id.list_container, mListFragment)
+                    .commit();
+        } else {
+            mFragmentManager.beginTransaction()
+                    .replace(R.id.list_container, mListFragment)
                     .commit();
         }
     }
@@ -252,6 +258,7 @@ public class MainActivity
         mFragmentManager.beginTransaction()
                 .replace(R.id.list_container, mapFragment)
                 .commit();
+
         AnalyticsUtils.sendScreenImageName(mTracker, MapFragment.class.getSimpleName(), LOG_TAG);
     }
 
@@ -304,7 +311,7 @@ public class MainActivity
 
     public void onAddNewEntryClick(View view) {
         if (mIsAnyVenueAdded) {
-            MexEntry mexEntry = new MexEntry("", "", FirebaseUtils.DEFAULT_RATING, FirebaseUtils.DEFAULT_PRICE, FirebaseUtils.MEX_ENTRY_DEFAULT_IMAGE_DOWNLOAD_URL, new Date().getTime());
+            MexEntry mexEntry = new MexEntry("", "", FirebaseUtils.DEFAULT_RATING, FirebaseUtils.DEFAULT_PRICE, "", new Date().getTime());
             String key = mDatabaseReference.child(getString(R.string.entries_database)).push().getKey();
             mDatabaseReference.child(getString(R.string.entries_database)).child(key).setValue(mexEntry);
             startDetailActivity(key);
@@ -325,7 +332,7 @@ public class MainActivity
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     // permission was granted, yay! Do the
                     // contacts-related task you need to do.
-                    setLocation();
+                    markLocationsOnMap();
                 } else {
                     // permission denied, boo! Disable the
                     // functionality that depends on this permission.
@@ -342,16 +349,16 @@ public class MainActivity
     private void startVenueActivity(String key, View aView) {
         Intent intent = new Intent(MainActivity.this, VenueActivity.class);
         intent.putExtra(VenueActivity.INTENT_EXTRA_FIREBASE_DATABASE_KEY, key);
-        if (MiscUtils.LOLLIPOP_AND_HIGHER && aView != null) {
+        if (MiscUtils.LOLLIPOP_AND_HIGHER && aView != null && getResources().getBoolean(R.bool.is_animation_enabled)) {
             aView.setTransitionName(getString(R.string.shared_element_venue_image_view));
             Bundle bundle = ActivityOptions.makeSceneTransitionAnimation(MainActivity.this, aView, getString(R.string.shared_element_venue_image_view)).toBundle();
-            if (mIsEnabled) {
+            if (mIsNotificationsEnabled) {
                 startActivityForResult(intent, RC_VENUE, bundle);
             } else {
                 startActivity(intent, bundle);
             }
         } else {
-            if (mIsEnabled) {
+            if (mIsNotificationsEnabled) {
                 startActivityForResult(intent, RC_VENUE);
             } else {
                 startActivity(intent);
@@ -382,7 +389,7 @@ public class MainActivity
         mIsAnyVenueAdded = aIsAnyVenueAdded;
     }
 
-    private void setLocation() {
+    private void markLocationsOnMap() {
         if (MiscUtils.checkPermissionsAndRequest(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, RC_LOCATION, this)) {
 
             mDatabaseReference.child(getString(R.string.venues_database)).addValueEventListener(new ValueEventListener() {
@@ -413,7 +420,17 @@ public class MainActivity
         }
         mGoogleMap.setOnMyLocationButtonClickListener(this);
         mGoogleMap.setOnMyLocationClickListener(this);
-        setLocation();
+        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        Criteria criteria = new Criteria();
+        String provider = locationManager.getBestProvider(criteria, false);
+        if (provider != null) {
+            Location location = locationManager.getLastKnownLocation(provider);
+            if (location != null) {
+                mGoogleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(), location.getLongitude()), MiscUtils.getFloat(R.dimen.camera_default_zoom, this)));
+            }
+        }
+
+        markLocationsOnMap();
     }
 
     @Override

@@ -11,6 +11,7 @@ import android.provider.MediaStore;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.util.Pair;
+import android.util.TypedValue;
 
 import com.esafirm.imagepicker.model.Image;
 
@@ -37,13 +38,13 @@ public class MiscUtils {
 
     public static Uri getImageUri(Context aContext, Image aImage) {
         File file = new File(aImage.getPath());
-        Bitmap bitmap = null;
+        Bitmap bitmap;
         try {
             bitmap = MediaStore.Images.Media.getBitmap(aContext.getContentResolver(), Uri.fromFile(file));
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             bitmap.compress(Bitmap.CompressFormat.JPEG, 25, outputStream);
             byte[] byteArray = outputStream.toByteArray();
-            Bitmap compressedBitmap = BitmapFactory.decodeByteArray(byteArray,0,byteArray.length);
+            Bitmap compressedBitmap = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length);
             return getImageUri(aContext, compressedBitmap);
         } catch (IOException aE) {
             aE.printStackTrace();
@@ -95,6 +96,12 @@ public class MiscUtils {
         });
 
         return aVenuePairs;
+    }
+
+    public static float getFloat(int aR, Context aContext) {
+        TypedValue typedValue = new TypedValue();
+        aContext.getResources().getValue(aR, typedValue, true);
+        return typedValue.getFloat();
     }
 
 }

@@ -19,7 +19,6 @@ import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.transition.Fade;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -61,6 +60,8 @@ import net.tirgan.mex.utilities.FirebaseUtils;
 import net.tirgan.mex.utilities.MiscUtils;
 import net.tirgan.mex.utilities.SettingsUtil;
 
+import java.io.File;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
@@ -73,6 +74,8 @@ public class VenueActivity extends AppCompatActivity {
 
     private static final int PICK_MAP_POINT_REQUEST = 1;
     private static final String INSTANCE_STATE_VENUE = "instance-state-venue";
+
+    public static final String INTENT_EXTRA_VENUE_LOCATION = "intent-extra-venue-location";
 
     @BindView(R.id.venue_iv)
     ImageView mVenueImageView;
@@ -92,11 +95,13 @@ public class VenueActivity extends AppCompatActivity {
     private boolean isLocationChanged = false;
     private Tracker mTracker;
 
+    private boolean mIsDefaultImageLoaded;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (MiscUtils.LOLLIPOP_AND_HIGHER) {
+        if (MiscUtils.LOLLIPOP_AND_HIGHER && getResources().getBoolean(R.bool.is_animation_enabled)) {
             getWindow().requestFeature(Window.FEATURE_CONTENT_TRANSITIONS);
             Fade fade = new Fade();
             fade.setDuration(1000);
@@ -104,7 +109,7 @@ public class VenueActivity extends AppCompatActivity {
         }
         setContentView(R.layout.activity_venue);
 
-        if (MiscUtils.LOLLIPOP_AND_HIGHER) {
+        if (MiscUtils.LOLLIPOP_AND_HIGHER && getResources().getBoolean(R.bool.is_animation_enabled)) {
             supportPostponeEnterTransition();
         }
 
@@ -113,38 +118,39 @@ public class VenueActivity extends AppCompatActivity {
         mVenueImageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Picasso.get()
-                        .load(mVenue.getImageUrl())
-                        .into(new Target() {
-                            @Override
-                            public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
-                                Uri imageUri = MiscUtils.getImageUri(getApplicationContext(), bitmap);
-                                final ImageView imageView = new ImageView(getApplicationContext());
-                                imageView.setImageURI(imageUri);
-                                Dialog dialog = new Dialog(VenueActivity.this);
-                                dialog.getWindow().requestFeature(Window.FEATURE_NO_TITLE);
-                                dialog.getWindow().setBackgroundDrawable(
-                                        new ColorDrawable(android.graphics.Color.TRANSPARENT));
-                                dialog.addContentView(imageView, new RelativeLayout.LayoutParams(
-                                        ViewGroup.LayoutParams.MATCH_PARENT,
-                                        ViewGroup.LayoutParams.MATCH_PARENT));
-                                imageView.getLayoutParams().height = ViewGroup.LayoutParams.MATCH_PARENT;
-                                imageView.getLayoutParams().width = ViewGroup.LayoutParams.MATCH_PARENT;
-                                imageView.setAdjustViewBounds(true);
-                                imageView.setScaleType(ImageView.ScaleType.FIT_XY);
-                                dialog.show();
-                            }
+                if (!mIsDefaultImageLoaded) {
+                    Picasso.get()
+                            .load(mVenue.getImageUrl())
+                            .into(new Target() {
+                                @Override
+                                public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
+                                    final ImageView imageView = new ImageView(getApplicationContext());
+                                    imageView.setImageBitmap(bitmap);
+                                    Dialog dialog = new Dialog(VenueActivity.this);
+                                    dialog.getWindow().requestFeature(Window.FEATURE_NO_TITLE);
+                                    dialog.getWindow().setBackgroundDrawable(
+                                            new ColorDrawable(android.graphics.Color.TRANSPARENT));
+                                    dialog.addContentView(imageView, new RelativeLayout.LayoutParams(
+                                            ViewGroup.LayoutParams.MATCH_PARENT,
+                                            ViewGroup.LayoutParams.MATCH_PARENT));
+                                    imageView.getLayoutParams().height = ViewGroup.LayoutParams.MATCH_PARENT;
+                                    imageView.getLayoutParams().width = ViewGroup.LayoutParams.MATCH_PARENT;
+                                    imageView.setAdjustViewBounds(true);
+                                    imageView.setScaleType(ImageView.ScaleType.FIT_XY);
+                                    dialog.show();
+                                }
 
-                            @Override
-                            public void onBitmapFailed(Exception e, Drawable errorDrawable) {
+                                @Override
+                                public void onBitmapFailed(Exception e, Drawable errorDrawable) {
 
-                            }
+                                }
 
-                            @Override
-                            public void onPrepareLoad(Drawable placeHolderDrawable) {
+                                @Override
+                                public void onPrepareLoad(Drawable placeHolderDrawable) {
 
-                            }
-                        });
+                                }
+                            });
+                }
             }
         });
 
@@ -207,7 +213,7 @@ public class VenueActivity extends AppCompatActivity {
             returnIntent.putExtra(RETURN_INTENT_EXTRA_IS_LOCATION_CHANGED, false);
         }
         setResult(Activity.RESULT_OK, returnIntent);
-        if (MiscUtils.LOLLIPOP_AND_HIGHER) {
+        if (MiscUtils.LOLLIPOP_AND_HIGHER && getResources().getBoolean(R.bool.is_animation_enabled)) {
             mVenueImageView.setTransitionName(null);
         }
         super.onStop();
@@ -333,14 +339,16 @@ public class VenueActivity extends AppCompatActivity {
                 mVenue = aDataSnapshot.getValue(Venue.class);
                 if (mVenue != null) {
                     if (mVenue.getImageUrl() != null && !mVenue.getImageUrl().isEmpty()) {
-                        if (MiscUtils.LOLLIPOP_AND_HIGHER) {
+                        mIsDefaultImageLoaded = false;
+                        mVenueImageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                        if (MiscUtils.LOLLIPOP_AND_HIGHER && getResources().getBoolean(R.bool.is_animation_enabled)) {
                             mVenueImageView.setTransitionName(getString(R.string.shared_element_venue_image_view));
                         }
                         Target target = new Target() {
                             @Override
                             public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
                                 mVenueImageView.setImageBitmap(bitmap);
-                                if (MiscUtils.LOLLIPOP_AND_HIGHER) {
+                                if (MiscUtils.LOLLIPOP_AND_HIGHER && getResources().getBoolean(R.bool.is_animation_enabled)) {
                                     supportStartPostponedEnterTransition();
                                 }
                             }
@@ -358,6 +366,8 @@ public class VenueActivity extends AppCompatActivity {
                         Picasso.get().load(mVenue.getImageUrl()).into(target);
                         mVenueImageView.setTag(target);
                     } else {
+                        mIsDefaultImageLoaded = true;
+                        mVenueImageView.setScaleType(ImageView.ScaleType.CENTER);
                         Picasso.get()
                                 .load(FirebaseUtils.VENUE_DEFAULT_IMAGE_DOWNLOAD_URL)
                                 .into(mVenueImageView);
@@ -422,8 +432,7 @@ public class VenueActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
         if (ImagePicker.shouldHandle(requestCode, resultCode, data)) {
             Image image = ImagePicker.getFirstImageOrNull(data);
-            Uri selectedImageUri = MiscUtils.getImageUri(this, image);
-            Log.d(VenueActivity.class.getSimpleName(), "ZZZZZ: " + selectedImageUri + "");
+            Uri selectedImageUri = Uri.fromFile(new File(image.getPath()));
             mVenueImageView.setImageURI(selectedImageUri);
             if (mVenue.getImageUrl() != null && !mVenue.getImageUrl().isEmpty()) {
                 mFirebaseStorage.getReferenceFromUrl(mVenue.getImageUrl()).delete();
@@ -470,6 +479,9 @@ public class VenueActivity extends AppCompatActivity {
 
     public void onPickLocationFromMap(View view) {
         Intent pickPointIntent = new Intent(this, MapsActivity.class);
+        if (mVenue.getLat() != 0 || mVenue.getLon() != 0) {
+            pickPointIntent.putExtra(INTENT_EXTRA_VENUE_LOCATION, new LatLng(mVenue.getLat(), mVenue.getLon()));
+        }
         startActivityForResult(pickPointIntent, PICK_MAP_POINT_REQUEST);
         isLocationChanged = true;
     }

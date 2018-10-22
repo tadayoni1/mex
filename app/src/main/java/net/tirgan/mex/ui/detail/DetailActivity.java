@@ -18,7 +18,6 @@ import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.transition.Fade;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -58,11 +57,12 @@ import net.tirgan.mex.model.MexEntry;
 import net.tirgan.mex.model.Venue;
 import net.tirgan.mex.model.Venues;
 import net.tirgan.mex.ui.settings.SettingsActivity;
-import net.tirgan.mex.ui.venue.VenueActivity;
 import net.tirgan.mex.utilities.AnalyticsUtils;
+import net.tirgan.mex.utilities.FirebaseUtils;
 import net.tirgan.mex.utilities.MiscUtils;
 import net.tirgan.mex.utilities.SettingsUtil;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -106,11 +106,12 @@ public class DetailActivity extends AppCompatActivity {
 
     private List<Venues> mVenues;
 
+    private boolean mIsDefaultImageLoaded;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (MiscUtils.LOLLIPOP_AND_HIGHER) {
+        if (MiscUtils.LOLLIPOP_AND_HIGHER && getResources().getBoolean(R.bool.is_animation_enabled)) {
             getWindow().requestFeature(Window.FEATURE_CONTENT_TRANSITIONS);
             Fade fade = new Fade();
             fade.setDuration(1000);
@@ -118,7 +119,7 @@ public class DetailActivity extends AppCompatActivity {
         }
         setContentView(R.layout.activity_detail);
 
-        if (MiscUtils.LOLLIPOP_AND_HIGHER) {
+        if (MiscUtils.LOLLIPOP_AND_HIGHER && getResources().getBoolean(R.bool.is_animation_enabled)) {
             supportPostponeEnterTransition();
         }
 
@@ -127,38 +128,39 @@ public class DetailActivity extends AppCompatActivity {
         mDetailImageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Picasso.get()
-                        .load(mMexEntry.getImageUrl())
-                        .into(new Target() {
-                            @Override
-                            public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
-                                Uri imageUri = MiscUtils.getImageUri(getApplicationContext(), bitmap);
-                                final ImageView imageView = new ImageView(getApplicationContext());
-                                imageView.setImageURI(imageUri);
-                                Dialog dialog = new Dialog(DetailActivity.this);
-                                dialog.getWindow().requestFeature(Window.FEATURE_NO_TITLE);
-                                dialog.getWindow().setBackgroundDrawable(
-                                        new ColorDrawable(android.graphics.Color.TRANSPARENT));
-                                dialog.addContentView(imageView, new RelativeLayout.LayoutParams(
-                                        ViewGroup.LayoutParams.MATCH_PARENT,
-                                        ViewGroup.LayoutParams.MATCH_PARENT));
-                                imageView.getLayoutParams().height = ViewGroup.LayoutParams.MATCH_PARENT;
-                                imageView.getLayoutParams().width = ViewGroup.LayoutParams.MATCH_PARENT;
-                                imageView.setAdjustViewBounds(true);
-                                imageView.setScaleType(ImageView.ScaleType.FIT_XY);
-                                dialog.show();
-                            }
+                if (!mIsDefaultImageLoaded) {
+                    Picasso.get()
+                            .load(mMexEntry.getImageUrl())
+                            .into(new Target() {
+                                @Override
+                                public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
+                                    final ImageView imageView = new ImageView(getApplicationContext());
+                                    imageView.setImageBitmap(bitmap);
+                                    Dialog dialog = new Dialog(DetailActivity.this);
+                                    dialog.getWindow().requestFeature(Window.FEATURE_NO_TITLE);
+                                    dialog.getWindow().setBackgroundDrawable(
+                                            new ColorDrawable(android.graphics.Color.TRANSPARENT));
+                                    dialog.addContentView(imageView, new RelativeLayout.LayoutParams(
+                                            ViewGroup.LayoutParams.MATCH_PARENT,
+                                            ViewGroup.LayoutParams.MATCH_PARENT));
+                                    imageView.getLayoutParams().height = ViewGroup.LayoutParams.MATCH_PARENT;
+                                    imageView.getLayoutParams().width = ViewGroup.LayoutParams.MATCH_PARENT;
+                                    imageView.setAdjustViewBounds(true);
+                                    imageView.setScaleType(ImageView.ScaleType.FIT_XY);
+                                    dialog.show();
+                                }
 
-                            @Override
-                            public void onBitmapFailed(Exception e, Drawable errorDrawable) {
+                                @Override
+                                public void onBitmapFailed(Exception e, Drawable errorDrawable) {
 
-                            }
+                                }
 
-                            @Override
-                            public void onPrepareLoad(Drawable placeHolderDrawable) {
+                                @Override
+                                public void onPrepareLoad(Drawable placeHolderDrawable) {
 
-                            }
-                        });
+                                }
+                            });
+                }
             }
         });
 
@@ -368,21 +370,25 @@ public class DetailActivity extends AppCompatActivity {
             public void onDataChange(@NonNull DataSnapshot aDataSnapshot) {
                 mMexEntry = aDataSnapshot.getValue(MexEntry.class);
                 if (mMexEntry.getImageUrl() != null && !mMexEntry.getImageUrl().isEmpty()) {
-                    if (MiscUtils.LOLLIPOP_AND_HIGHER) {
+                    mIsDefaultImageLoaded = false;
+                    mDetailImageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                    if (MiscUtils.LOLLIPOP_AND_HIGHER && getResources().getBoolean(R.bool.is_animation_enabled)) {
                         mDetailImageView.setTransitionName(getString(R.string.shared_element_mex_entry_image_view));
                     }
                     final Target target = new Target() {
                         @Override
                         public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
                             mDetailImageView.setImageBitmap(bitmap);
-                            if (MiscUtils.LOLLIPOP_AND_HIGHER) {
+                            if (MiscUtils.LOLLIPOP_AND_HIGHER && getResources().getBoolean(R.bool.is_animation_enabled)) {
                                 supportStartPostponedEnterTransition();
                             }
                         }
 
                         @Override
                         public void onBitmapFailed(Exception e, Drawable errorDrawable) {
-                            supportStartPostponedEnterTransition();
+                            if (MiscUtils.LOLLIPOP_AND_HIGHER && getResources().getBoolean(R.bool.is_animation_enabled)) {
+                                supportStartPostponedEnterTransition();
+                            }
                         }
 
                         @Override
@@ -392,6 +398,12 @@ public class DetailActivity extends AppCompatActivity {
                     };
                     Picasso.get().load(mMexEntry.getImageUrl()).into(target);
                     mDetailImageView.setTag(target);
+                } else {
+                    mIsDefaultImageLoaded = true;
+                    mDetailImageView.setScaleType(ImageView.ScaleType.CENTER);
+                    Picasso.get()
+                            .load(FirebaseUtils.MEX_ENTRY_DEFAULT_IMAGE_DOWNLOAD_URL)
+                            .into(mDetailImageView);
                 }
                 mDetailEditText.setText(mMexEntry.getName());
                 mDetailPriceEditText.setText(String.valueOf(mMexEntry.getPrice()));
@@ -450,8 +462,7 @@ public class DetailActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
         if (ImagePicker.shouldHandle(requestCode, resultCode, data)) {
             Image image = ImagePicker.getFirstImageOrNull(data);
-            Uri selectedImageUri = MiscUtils.getImageUri(this, image);
-            Log.d(VenueActivity.class.getSimpleName(), "ZZZZZ: " + selectedImageUri + "");
+            Uri selectedImageUri = Uri.fromFile(new File(image.getPath()));
             mDetailImageView.setImageURI(selectedImageUri);
             if (mMexEntry.getImageUrl() != null && !mMexEntry.getImageUrl().isEmpty()) {
                 mFirebaseStorage.getReferenceFromUrl(mMexEntry.getImageUrl()).delete();

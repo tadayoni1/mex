@@ -17,6 +17,8 @@ public class SettingsUtil {
     public final static String PREF_SORT_BY = "pref-sort-by";
     public final static String PREF_FILTER_BY = "pref-filter-by";
 
+    public final static String PREF_AD_ENABLED = "pref-ad-enabled";
+
 
     public static void savePrefSortAndFilter(Context aContext, int aSortBy, float aFilterBy) {
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(aContext);

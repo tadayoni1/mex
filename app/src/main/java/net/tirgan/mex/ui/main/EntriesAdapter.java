@@ -26,6 +26,7 @@ import com.squareup.picasso.Picasso;
 import net.tirgan.mex.R;
 import net.tirgan.mex.model.MexEntry;
 import net.tirgan.mex.ui.detail.DetailActivity;
+import net.tirgan.mex.utilities.FirebaseUtils;
 import net.tirgan.mex.utilities.MiscUtils;
 
 import java.util.ArrayList;
@@ -58,6 +59,10 @@ public class EntriesAdapter extends RecyclerView.Adapter<EntriesAdapter.EntriesA
             Picasso.get()
                     .load(mexEntry.getImageUrl())
                     .into(holder.mMexEntryImageView);
+        } else {
+            Picasso.get()
+                    .load(FirebaseUtils.MEX_ENTRY_DEFAULT_IMAGE_DOWNLOAD_URL)
+                    .into(holder.mMexEntryImageView);
         }
         holder.mMexEntryTextView.setText(mexEntry.getName());
         holder.mMexEntryRatingBar.setRating(mexEntry.getRating());
@@ -67,7 +72,7 @@ public class EntriesAdapter extends RecyclerView.Adapter<EntriesAdapter.EntriesA
             public void onClick(View v) {
                 Intent intent = new Intent(mContext, DetailActivity.class);
                 intent.putExtra(DetailActivity.INTENT_EXTRA_DETAIL_FIREBASE_DATABASE_KEY, mKeys.get(holder.getAdapterPosition()));
-                if (MiscUtils.LOLLIPOP_AND_HIGHER) {
+                if (MiscUtils.LOLLIPOP_AND_HIGHER && mContext.getResources().getBoolean(R.bool.is_animation_enabled)) {
                     v.setTransitionName(mContext.getString(R.string.shared_element_mex_entry_image_view));
                     Bundle bundle = ActivityOptions.makeSceneTransitionAnimation((Activity) mContext, v, mContext.getString(R.string.shared_element_mex_entry_image_view)).toBundle();
                     mContext.startActivity(intent, bundle);
