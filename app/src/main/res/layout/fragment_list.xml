@@ -43,45 +43,57 @@
             android:layout_height="match_parent"
             />
 
-        <com.getbase.floatingactionbutton.FloatingActionsMenu
-            android:id="@+id/fragment_list_fam"
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/fragment_list_fab"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="end|bottom"
             android:layout_marginEnd="16dp"
             android:layout_marginRight="16dp"
-            android:contentDescription="@string/cd_add_new_venue_or_entry"
-            fab:fab_addButtonColorNormal="@color/colorAccent"
-            fab:fab_addButtonColorPressed="@color/colorAccentPressed"
-            fab:fab_addButtonPlusIconColor="@color/white"
-            fab:fab_addButtonSize="mini"
-            fab:fab_title="@string/take_photo"
-            fab:fab_labelStyle="@style/menu_labels_style"
-            fab:fab_labelsPosition="left">
+            android:layout_marginBottom="16dp"
+            android:src="@drawable/food_apple"
+            android:onClick="onAddNewMexClick"
+            />
 
-            <com.getbase.floatingactionbutton.FloatingActionButton
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:contentDescription="@string/cd_add_new_venue"
-                fab:fab_colorNormal="@color/colorAccent"
-                android:onClick="onAddNewVenueClick"
-                app:fab_icon="@drawable/silverware_fork_knife"
-                fab:fab_size="mini"
-                fab:fab_title="@string/add_new_restaurant"
-                fab:fab_colorPressed="@color/colorAccentPressed"/>
+        <!--<com.getbase.floatingactionbutton.FloatingActionsMenu-->
+            <!--android:id="@+id/fragment_list_fam"-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:layout_gravity="end|bottom"-->
+            <!--android:layout_marginEnd="16dp"-->
+            <!--android:layout_marginRight="16dp"-->
+            <!--android:contentDescription="@string/cd_add_new_venue_or_entry"-->
+            <!--fab:fab_addButtonColorNormal="@color/colorAccent"-->
+            <!--fab:fab_addButtonColorPressed="@color/colorAccentPressed"-->
+            <!--fab:fab_addButtonPlusIconColor="@color/white"-->
+            <!--fab:fab_addButtonSize="mini"-->
+            <!--fab:fab_title="@string/take_photo"-->
+            <!--fab:fab_labelStyle="@style/menu_labels_style"-->
+            <!--fab:fab_labelsPosition="left">-->
 
-            <com.getbase.floatingactionbutton.FloatingActionButton
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:contentDescription="@string/cd_add_new_mex_entry"
-                fab:fab_colorNormal="@color/colorAccent"
-                android:onClick="onAddNewEntryClick"
-                app:fab_icon="@drawable/food_apple"
-                fab:fab_size="mini"
-                fab:fab_title="@string/add_new_entry"
-                fab:fab_colorPressed="@color/colorAccentPressed"/>
+            <!--<com.getbase.floatingactionbutton.FloatingActionButton-->
+                <!--android:layout_width="wrap_content"-->
+                <!--android:layout_height="wrap_content"-->
+                <!--android:contentDescription="@string/cd_add_new_venue"-->
+                <!--fab:fab_colorNormal="@color/colorAccent"-->
+                <!--android:onClick="onAddNewVenueClick"-->
+                <!--app:fab_icon="@drawable/silverware_fork_knife"-->
+                <!--fab:fab_size="mini"-->
+                <!--fab:fab_title="@string/add_new_restaurant"-->
+                <!--fab:fab_colorPressed="@color/colorAccentPressed"/>-->
 
-        </com.getbase.floatingactionbutton.FloatingActionsMenu>
+            <!--<com.getbase.floatingactionbutton.FloatingActionButton-->
+                <!--android:layout_width="wrap_content"-->
+                <!--android:layout_height="wrap_content"-->
+                <!--android:contentDescription="@string/cd_add_new_mex_entry"-->
+                <!--fab:fab_colorNormal="@color/colorAccent"-->
+                <!--android:onClick="onAddNewEntryClick"-->
+                <!--app:fab_icon="@drawable/food_apple"-->
+                <!--fab:fab_size="mini"-->
+                <!--fab:fab_title="@string/add_new_entry"-->
+                <!--fab:fab_colorPressed="@color/colorAccentPressed"/>-->
+
+        <!--</com.getbase.floatingactionbutton.FloatingActionsMenu>-->
     </FrameLayout>
 
     <com.google.android.gms.ads.AdView

@@ -12,19 +12,19 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.transition.Fade;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.RatingBar;
@@ -35,6 +35,10 @@ import com.esafirm.imagepicker.features.ImagePicker;
 import com.esafirm.imagepicker.features.ReturnMode;
 import com.esafirm.imagepicker.model.Image;
 import com.google.android.gms.analytics.Tracker;
+import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
+import com.google.android.gms.common.GooglePlayServicesRepairableException;
+import com.google.android.gms.location.places.Place;
+import com.google.android.gms.location.places.ui.PlacePicker;
 import com.google.android.gms.tasks.Continuation;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -49,13 +53,12 @@ import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Target;
-import com.toptoche.searchablespinnerlibrary.SearchableSpinner;
 
 import net.tirgan.mex.MyFirebaseApp;
 import net.tirgan.mex.R;
 import net.tirgan.mex.model.MexEntry;
-import net.tirgan.mex.model.Venue;
 import net.tirgan.mex.model.Venues;
+import net.tirgan.mex.ui.main.MainActivity;
 import net.tirgan.mex.ui.settings.SettingsActivity;
 import net.tirgan.mex.utilities.AnalyticsUtils;
 import net.tirgan.mex.utilities.FirebaseUtils;
@@ -63,7 +66,6 @@ import net.tirgan.mex.utilities.MiscUtils;
 import net.tirgan.mex.utilities.SettingsUtil;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.BindView;
@@ -77,6 +79,8 @@ public class DetailActivity extends AppCompatActivity {
 
     private static final String INSTANCE_STATE_MEX_ENTRY = "instance-state-mex-entry";
 
+    public static final String TAG = MainActivity.class.getSimpleName();
+    private static final int PLACE_PICKER_REQUEST = 1;
 
     @BindView(R.id.detail_iv)
     ImageView mDetailImageView;
@@ -90,8 +94,8 @@ public class DetailActivity extends AppCompatActivity {
     @BindView(R.id.detail_price_et)
     EditText mDetailPriceEditText;
 
-    @BindView(R.id.detail_venue_spinner)
-    SearchableSpinner mVenueSpinner;
+//    @BindView(R.id.detail_venue_spinner)
+//    SearchableSpinner mVenueSpinner;
 
     private DatabaseReference mDetailDatabaseReference;
     private DatabaseReference mVenuesDatabaseReference;
@@ -182,7 +186,7 @@ public class DetailActivity extends AppCompatActivity {
         initializeFirebase();
 
         initializeMexEntryDetails();
-        initializeVenuesSpinner();
+//        initializeVenuesSpinner();
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -325,44 +329,44 @@ public class DetailActivity extends AppCompatActivity {
         mStorageReference = mFirebaseStorage.getReference().child(getString(R.string.users_database)).child(userId).child(getString(R.string.entries_database));
     }
 
-    private void initializeVenuesSpinner() {
-        mVenueSpinner.setTitle(getString(R.string.select_restaurant));
-        mVenues = new ArrayList<>();
-        mVenuesDatabaseReference.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot aDataSnapshot) {
-                for (DataSnapshot dataSnapshot : aDataSnapshot.getChildren()) {
-                    Venue venue = dataSnapshot.getValue(Venue.class);
-                    mVenues.add(new Venues(dataSnapshot.getKey(), venue.getName()));
-                }
-                ArrayAdapter<Venues> spinnerArrayAdapter = new ArrayAdapter<>(getBaseContext(), android.R.layout.simple_spinner_item, mVenues);
-                mVenueSpinner.setAdapter(spinnerArrayAdapter);
-                int currentVenue = -1;
-                if (mMexEntry != null) {
-                    currentVenue = Venues.getPositionOfKey(mVenues, mMexEntry.getVenueKey());
-                }
-                mVenueSpinner.setSelection(currentVenue);
-                mVenueSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                    @Override
-                    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                        Venues v = (Venues) parent.getItemAtPosition(position);
-                        mMexEntry.setVenueKey(v.getFirebaseKey());
-                        mDetailDatabaseReference.setValue(mMexEntry);
-                    }
-
-                    @Override
-                    public void onNothingSelected(AdapterView<?> parent) {
-
-                    }
-                });
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError aDatabaseError) {
-
-            }
-        });
-    }
+//    private void initializeVenuesSpinner() {
+//        mVenueSpinner.setTitle(getString(R.string.select_restaurant));
+//        mVenues = new ArrayList<>();
+//        mVenuesDatabaseReference.addValueEventListener(new ValueEventListener() {
+//            @Override
+//            public void onDataChange(@NonNull DataSnapshot aDataSnapshot) {
+//                for (DataSnapshot dataSnapshot : aDataSnapshot.getChildren()) {
+//                    Venue venue = dataSnapshot.getValue(Venue.class);
+//                    mVenues.add(new Venues(dataSnapshot.getKey(), venue.getName()));
+//                }
+//                ArrayAdapter<Venues> spinnerArrayAdapter = new ArrayAdapter<>(getBaseContext(), android.R.layout.simple_spinner_item, mVenues);
+//                mVenueSpinner.setAdapter(spinnerArrayAdapter);
+//                int currentVenue = -1;
+//                if (mMexEntry != null) {
+//                    currentVenue = Venues.getPositionOfKey(mVenues, mMexEntry.getVenueKey());
+//                }
+//                mVenueSpinner.setSelection(currentVenue);
+//                mVenueSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+//                    @Override
+//                    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+//                        Venues v = (Venues) parent.getItemAtPosition(position);
+//                        mMexEntry.setVenueKey(v.getFirebaseKey());
+//                        mDetailDatabaseReference.setValue(mMexEntry);
+//                    }
+//
+//                    @Override
+//                    public void onNothingSelected(AdapterView<?> parent) {
+//
+//                    }
+//                });
+//            }
+//
+//            @Override
+//            public void onCancelled(@NonNull DatabaseError aDatabaseError) {
+//
+//            }
+//        });
+//    }
 
     private void initializeMexEntryDetails() {
         mDetailDatabaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -495,6 +499,25 @@ public class DetailActivity extends AppCompatActivity {
             });
 
         }
+        if (requestCode == PLACE_PICKER_REQUEST && resultCode == RESULT_OK) {
+            Place place = PlacePicker.getPlace(this, data);
+            if (place == null) {
+                Log.i(TAG, "No place selected");
+                return;
+            }
+
+            // Extract the place information from the API
+            String placeName = place.getName().toString();
+            String placeAddress = place.getAddress().toString();
+            String placeID = place.getId();
+
+            mMexEntry.setPlaceId(placeID);
+            mDetailDatabaseReference.setValue(mMexEntry);
+
+            Toast.makeText(this, "Place Name: " + placeName, Toast.LENGTH_LONG).show();
+
+        }
+
 // else {
 //            switch (requestCode) {
 //                case RC_IMAGE_CAPTURE_MEX_ENTRY:
@@ -535,5 +558,26 @@ public class DetailActivity extends AppCompatActivity {
 //                    break;
 //            }
         //   }
+    }
+
+    public void onUpdateLocationClick(View view) {
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            //TODO: handle denied location access
+            return;
+        }
+        try {
+            // Start a new Activity for the Place Picker API, this will trigger {@code #onActivityResult}
+            // when a place is selected or with the user cancels.
+            PlacePicker.IntentBuilder builder = new PlacePicker.IntentBuilder();
+            Intent i = builder.build(this);
+            startActivityForResult(i, PLACE_PICKER_REQUEST);
+        } catch (GooglePlayServicesRepairableException e) {
+            Log.e(TAG, String.format("GooglePlayServices Not Available [%s]", e.getMessage()));
+        } catch (GooglePlayServicesNotAvailableException e) {
+            Log.e(TAG, String.format("GooglePlayServices Not Available [%s]", e.getMessage()));
+        } catch (Exception e) {
+            Log.e(TAG, String.format("PlacePicker Exception: %s", e.getMessage()));
+        }
     }
 }

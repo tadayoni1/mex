@@ -11,17 +11,19 @@ public class MexEntry implements Parcelable {
     private float mPrice;
     private String mImageUrl;
     private long mDate;
+    private String mPlaceId;
 
     public MexEntry() {
     }
 
-    public MexEntry(String aVenueKey, String aName, float aRating, float aPrice, String aImageUrl, long aDate) {
+    public MexEntry(String aVenueKey, String aName, float aRating, float aPrice, String aImageUrl, long aDate, String aPlaceId) {
         mVenueKey = aVenueKey;
         mName = aName;
         mRating = aRating;
         mPrice = aPrice;
         mImageUrl = aImageUrl;
         mDate = aDate;
+        mPlaceId = aPlaceId;
     }
 
     protected MexEntry(Parcel in) {
@@ -31,6 +33,7 @@ public class MexEntry implements Parcelable {
         mPrice = in.readFloat();
         mImageUrl = in.readString();
         mDate = in.readLong();
+        mPlaceId = in.readString();
     }
 
     public static final Creator<MexEntry> CREATOR = new Creator<MexEntry>() {
@@ -106,5 +109,14 @@ public class MexEntry implements Parcelable {
         dest.writeFloat(mPrice);
         dest.writeString(mImageUrl);
         dest.writeLong(mDate);
+        dest.writeString(mPlaceId);
+    }
+
+    public String getPlaceId() {
+        return mPlaceId;
+    }
+
+    public void setPlaceId(String aPlaceId) {
+        mPlaceId = aPlaceId;
     }
 }

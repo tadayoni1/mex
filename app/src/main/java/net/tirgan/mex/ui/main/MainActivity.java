@@ -65,8 +65,8 @@ import butterknife.ButterKnife;
 
 public class MainActivity
         extends AppCompatActivity
-        implements ListFragment.ListFragmentOnClickHandler, OnMapReadyCallback,
-        GoogleMap.OnMyLocationButtonClickListener, GoogleMap.OnMyLocationClickListener,
+        implements ListFragment.ListFragmentOnClickHandler,
+        OnMapReadyCallback, GoogleMap.OnMyLocationButtonClickListener, GoogleMap.OnMyLocationClickListener,
         SortByDialogFragment.NoticeDialogListener {
 
     private static final String LOG_TAG = MainActivity.class.getSimpleName();
@@ -306,20 +306,28 @@ public class MainActivity
         String key = mDatabaseReference.child(getString(R.string.venues_database)).push().getKey();
         mDatabaseReference.child(getString(R.string.venues_database)).child(key).setValue(venue);
         startVenueActivity(key, null);
-        mListFragment.collapseFloatingActionMenu();
+//        mListFragment.collapseFloatingActionMenu();
     }
 
     public void onAddNewEntryClick(View view) {
         if (mIsAnyVenueAdded) {
-            MexEntry mexEntry = new MexEntry("", "", FirebaseUtils.DEFAULT_RATING, FirebaseUtils.DEFAULT_PRICE, "", new Date().getTime());
+            MexEntry mexEntry = new MexEntry("", "", FirebaseUtils.DEFAULT_RATING, FirebaseUtils.DEFAULT_PRICE, "", new Date().getTime(), "");
             String key = mDatabaseReference.child(getString(R.string.entries_database)).push().getKey();
             mDatabaseReference.child(getString(R.string.entries_database)).child(key).setValue(mexEntry);
             startDetailActivity(key);
-            mListFragment.collapseFloatingActionMenu();
+//            mListFragment.collapseFloatingActionMenu();
         } else {
             Toast.makeText(this, getString(R.string.first_add_venue), Toast.LENGTH_SHORT).show();
         }
     }
+
+    public void onAddNewMexClick(View view) {
+        MexEntry mexEntry = new MexEntry("", "", FirebaseUtils.DEFAULT_RATING, FirebaseUtils.DEFAULT_PRICE, "", new Date().getTime(), "");
+        String key = mDatabaseReference.child(getString(R.string.entries_database)).push().getKey();
+        mDatabaseReference.child(getString(R.string.entries_database)).child(key).setValue(mexEntry);
+        startDetailActivity(key);
+    }
+
 
 
     @Override
@@ -389,8 +397,13 @@ public class MainActivity
         mIsAnyVenueAdded = aIsAnyVenueAdded;
     }
 
+    @Override
+    public void onMexClick(String aKey) {
+        startDetailActivity(aKey);
+    }
+
     private void markLocationsOnMap() {
-        if (MiscUtils.checkPermissionsAndRequest(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, RC_LOCATION, this)) {
+        if (MiscUtils.checkPermissionsAndRequest(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, RC_LOCATION, this)) {
 
             mDatabaseReference.child(getString(R.string.venues_database)).addValueEventListener(new ValueEventListener() {
                 @Override
@@ -459,4 +472,5 @@ public class MainActivity
     public void onDialogNegativeClick(DialogFragment dialog) {
 
     }
+
 }
