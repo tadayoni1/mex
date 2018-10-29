@@ -1,84 +1,85 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.v7.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/mex_list_item_cv"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="4dp"
-    app:cardCornerRadius="4dp"
-    app:cardElevation="4dp">
+    android:layout_margin="2dp"
+    android:background="@color/white">
 
-    <FrameLayout
+
+    <ImageView
+        android:id="@+id/mex_entry_lv_iv"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:layout_margin="0dp"
-        android:orientation="vertical">
+        android:adjustViewBounds="true"
+        android:contentDescription="@string/cd_mex_image"
+        android:scaleType="centerCrop"
+        app:layout_constraintBottom_toTopOf="@id/list_item_mex_cl"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:src="@drawable/noodle" />
 
-        <ImageView
-            android:id="@+id/mex_entry_lv_iv"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:adjustViewBounds="true"
-            android:scaleType="centerCrop"
-            tools:src="@drawable/noodle"
-            android:contentDescription="@string/cd_mex_image" />
 
-        <LinearLayout
-            android:layout_width="match_parent"
+    <android.support.constraint.ConstraintLayout
+        android:id="@+id/list_item_mex_cl"
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+
+        <TextView
+            android:id="@+id/mex_entry_lv_tv"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="bottom"
-            android:gravity="center"
-            android:orientation="vertical"
-            android:background="#AACCCCCC">
+            android:layout_margin="8dp"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="@color/md_black_1000"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="@string/sample_food_name" />
 
-            <TextView
-                android:id="@+id/mex_entry_lv_tv"
-                android:layout_width="wrap_content"
-                android:layout_height="0dp"
-                android:layout_weight="3"
-                android:layout_marginEnd="8dp"
-                android:layout_marginLeft="8dp"
-                android:layout_marginRight="8dp"
-                android:layout_marginStart="8dp"
-                android:layout_marginTop="8dp"
-                android:textSize="14sp"
-                android:textColor="#4c4c4c"
-                tools:text="@string/sample_food_name" />
+        <TextView
+            android:id="@+id/mex_venue_lv_tv"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="8dp"
+            android:textSize="12sp"
+            android:textColor="@color/md_black_1000"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/mex_entry_lv_tv"
+            tools:text="@string/sample_venue_name" />
 
-            <TextView
-                android:id="@+id/mex_venue_lv_tv"
-                android:layout_width="wrap_content"
-                android:layout_height="0dp"
-                android:layout_weight="3"
-                android:layout_marginEnd="8dp"
-                android:layout_marginLeft="8dp"
-                android:layout_marginRight="8dp"
-                android:layout_marginStart="8dp"
-                android:layout_marginTop="8dp"
-                android:textSize="10sp"
-                android:textColor="#707070"
-                tools:text="@string/sample_venue_name" />
-
-            <android.support.v7.widget.AppCompatRatingBar
-                android:id="@+id/mex_entry_lv_rb"
-                style="?android:attr/ratingBarStyleSmall"
-                android:layout_width="wrap_content"
-                android:layout_height="0dp"
-                android:layout_weight="3"
-                android:layout_marginEnd="8dp"
-                android:layout_marginLeft="8dp"
-                android:layout_marginRight="8dp"
-                android:layout_marginStart="8dp"
-                android:layout_marginBottom="8dp"
-                android:numStars="5"
-                android:stepSize="0.5"
-                />
-
-        </LinearLayout>
+        <TextView
+            android:id="@+id/mex_entry_rating_tv"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="8dp"
+            android:textColor="@color/md_black_1000"
+            android:textSize="12sp"
+            app:layout_constraintBottom_toBottomOf="@+id/mex_entry_lv_tv"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/mex_entry_lv_tv"
+            tools:text="@string/sample_rating_tv" />
 
 
+        <TextView
+            android:id="@+id/mex_entry_date"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="8dp"
+            android:textColor="@color/md_black_1000"
+            android:textSize="10sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            tools:text="@string/sample_mex_entry_date" />
 
-    </FrameLayout>
+    </android.support.constraint.ConstraintLayout>
 
-</android.support.v7.widget.CardView>
+
+</android.support.constraint.ConstraintLayout>

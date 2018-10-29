@@ -9,7 +9,8 @@ import net.tirgan.mex.ui.main.VenuesAdapter;
 
 public class SettingsUtil {
 
-    public final static int MENU_ITEM_SHARE = 0;
+    public final static int MENU_ITEM_EDIT = 0;
+    public final static int MENU_ITEM_SHARE = 1;
     public final static int MENU_ITEM_DELETE = 9;
     public final static int MENU_ITEM_SETTINGS = 10;
 

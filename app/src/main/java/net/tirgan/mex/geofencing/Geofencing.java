@@ -14,6 +14,12 @@ import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.GeofencingRequest;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.places.GeoDataClient;
+import com.google.android.gms.location.places.Place;
+import com.google.android.gms.location.places.PlaceBufferResponse;
+import com.google.android.gms.location.places.Places;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -21,13 +27,13 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.ValueEventListener;
 
 import net.tirgan.mex.R;
-import net.tirgan.mex.model.Venue;
+import net.tirgan.mex.model.MexEntry;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class Geofencing implements ResultCallback<Status>,
-        GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener{
+        GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
 
     private static final long GEOFENCE_TIMEOUT = 24 * 60 * 60 * 1000;
     private static final float GEOFENCE_RADIUS = 500.0f;
@@ -58,7 +64,7 @@ public class Geofencing implements ResultCallback<Status>,
         if (mGoogleApiClient == null || mGeofenceList == null || mGeofenceList.size() == 0) {
             return;
         }
-        if(!mGoogleApiClient.isConnected()) {
+        if (!mGoogleApiClient.isConnected()) {
             return;
         }
         try {
@@ -88,22 +94,39 @@ public class Geofencing implements ResultCallback<Status>,
     public void updateGeofenceListAndRegisterAll(DatabaseReference aDatabaseReference) {
         mGeofenceList = new ArrayList<>();
         final String userId = FirebaseAuth.getInstance().getUid();
-        DatabaseReference databaseReference = aDatabaseReference.child(mContext.getString(R.string.users_database)).child(userId).child(mContext.getString(R.string.venues_database));
+        DatabaseReference databaseReference = aDatabaseReference.child(mContext.getString(R.string.users_database)).child(userId).child(mContext.getString(R.string.entries_database));
         databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot aDataSnapshot) {
+                ArrayList<String> placeIds = new ArrayList<>();
                 for (DataSnapshot dataSnapshot : aDataSnapshot.getChildren()) {
-                    Venue venue = dataSnapshot.getValue(Venue.class);
-                    if (venue.getLat() != 0 && venue.getLon() != 0) {
-                        Geofence geofence = new Geofence.Builder()
-                                .setRequestId(dataSnapshot.getKey())
-                                .setExpirationDuration(GEOFENCE_TIMEOUT)
-                                .setCircularRegion(venue.getLat(), venue.getLon(), GEOFENCE_RADIUS)
-                                .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER)
-                                .build();
-                        mGeofenceList.add(geofence);
+                    MexEntry mexEntry = dataSnapshot.getValue(MexEntry.class);
+                    if (!placeIds.contains(mexEntry.getPlaceId())) {
+                        placeIds.add(mexEntry.getPlaceId());
                     }
                 }
+                GeoDataClient geoDataClient = Places.getGeoDataClient(mContext, null);
+                for (final String placeId : placeIds) {
+                    if (placeId != null && !placeId.isEmpty()) {
+                        geoDataClient.getPlaceById(placeId).addOnCompleteListener(new OnCompleteListener<PlaceBufferResponse>() {
+                            @Override
+                            public void onComplete(@NonNull Task<PlaceBufferResponse> task) {
+                                if (task.isSuccessful()) {
+                                    PlaceBufferResponse places = task.getResult();
+                                    Place myPlace = places.get(0);
+                                    Geofence geofence = new Geofence.Builder()
+                                            .setRequestId(placeId)
+                                            .setExpirationDuration(GEOFENCE_TIMEOUT)
+                                            .setCircularRegion(myPlace.getLatLng().latitude, myPlace.getLatLng().longitude, GEOFENCE_RADIUS)
+                                            .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER)
+                                            .build();
+                                    mGeofenceList.add(geofence);
+                                }
+                            }
+                        });
+                    }
+                }
+
                 registerAllGeofences();
             }
 

@@ -1,23 +1,17 @@
 package net.tirgan.mex.ui.detail;
 
-import android.Manifest;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.transition.Fade;
 import android.util.Log;
 import android.view.Menu;
@@ -25,21 +19,17 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.RatingBar;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
-import com.esafirm.imagepicker.features.ImagePicker;
-import com.esafirm.imagepicker.features.ReturnMode;
-import com.esafirm.imagepicker.model.Image;
 import com.google.android.gms.analytics.Tracker;
-import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
-import com.google.android.gms.common.GooglePlayServicesRepairableException;
+import com.google.android.gms.location.places.GeoDataClient;
 import com.google.android.gms.location.places.Place;
-import com.google.android.gms.location.places.ui.PlacePicker;
-import com.google.android.gms.tasks.Continuation;
+import com.google.android.gms.location.places.PlaceBufferResponse;
+import com.google.android.gms.location.places.Places;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
@@ -50,23 +40,18 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
-import com.google.firebase.storage.UploadTask;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Target;
 
 import net.tirgan.mex.MyFirebaseApp;
 import net.tirgan.mex.R;
 import net.tirgan.mex.model.MexEntry;
-import net.tirgan.mex.model.Venues;
 import net.tirgan.mex.ui.main.MainActivity;
 import net.tirgan.mex.ui.settings.SettingsActivity;
 import net.tirgan.mex.utilities.AnalyticsUtils;
 import net.tirgan.mex.utilities.FirebaseUtils;
 import net.tirgan.mex.utilities.MiscUtils;
 import net.tirgan.mex.utilities.SettingsUtil;
-
-import java.io.File;
-import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -81,25 +66,31 @@ public class DetailActivity extends AppCompatActivity {
 
     public static final String TAG = MainActivity.class.getSimpleName();
     private static final int PLACE_PICKER_REQUEST = 1;
+    private static final int ACTIVITY_FOR_RESULT_DETAIL_EDIT = 10;
 
-    @BindView(R.id.detail_iv)
+    @BindView(R.id.detail_thumbnail_iv)
     ImageView mDetailImageView;
 
     @BindView(R.id.detail_rb)
     RatingBar mDetailRatingBar;
 
-    @BindView(R.id.detail_et)
-    EditText mDetailEditText;
+    @BindView(R.id.mex_title_tv)
+    TextView mDetailEditText;
 
-    @BindView(R.id.detail_price_et)
-    EditText mDetailPriceEditText;
+    @BindView(R.id.mex_venue_date_tv)
+    TextView mVenueDateTextView;
+
+
+//    @BindView(R.id.mex_title_tv)
+//    EditText mDetailEditText;
+
+//    @BindView(R.id.detail_price_et)
+//    EditText mDetailPriceEditText;
 
 //    @BindView(R.id.detail_venue_spinner)
 //    SearchableSpinner mVenueSpinner;
 
     private DatabaseReference mDetailDatabaseReference;
-    private DatabaseReference mVenuesDatabaseReference;
-
     private FirebaseStorage mFirebaseStorage;
     private StorageReference mStorageReference;
 
@@ -108,9 +99,8 @@ public class DetailActivity extends AppCompatActivity {
     private String mKey;
     private Tracker mTracker;
 
-    private List<Venues> mVenues;
-
     private boolean mIsDefaultImageLoaded;
+    private GeoDataClient mGeoDataClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -128,6 +118,8 @@ public class DetailActivity extends AppCompatActivity {
         }
 
         ButterKnife.bind(this);
+
+        mGeoDataClient = Places.getGeoDataClient(this, null);
 
         mDetailImageView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -186,58 +178,15 @@ public class DetailActivity extends AppCompatActivity {
         initializeFirebase();
 
         initializeMexEntryDetails();
-//        initializeVenuesSpinner();
 
         Toolbar toolbar = findViewById(R.id.toolbar);
+        toolbar.setTitle(" ");
         setSupportActionBar(toolbar);
-
-        mDetailEditText.addTextChangedListener(new TextWatcher() {
+        toolbar.setNavigationIcon(android.support.v7.appcompat.R.drawable.abc_ic_ab_back_material);
+        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-                mMexEntry.setName(mDetailEditText.getText().toString());
-                mDetailDatabaseReference.setValue(mMexEntry);
-            }
-        });
-
-        mDetailPriceEditText.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-                float price = 0f;
-                try {
-                    price = Float.valueOf(mDetailPriceEditText.getText().toString());
-                } catch (Exception e) {
-
-                }
-                mMexEntry.setPrice(price);
-                mDetailDatabaseReference.setValue(mMexEntry);
-            }
-        });
-
-        mDetailRatingBar.setOnRatingBarChangeListener(new RatingBar.OnRatingBarChangeListener() {
-            @Override
-            public void onRatingChanged(RatingBar ratingBar, float rating, boolean fromUser) {
-                mMexEntry.setRating(rating);
-                mDetailDatabaseReference.setValue(mMexEntry);
+            public void onClick(View view) {
+                onBackPressed();
             }
         });
     }
@@ -250,8 +199,9 @@ public class DetailActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
+        menu.add(0, SettingsUtil.MENU_ITEM_EDIT, SettingsUtil.MENU_ITEM_EDIT, getString(R.string.menu_item_edit)).setIcon(android.R.drawable.ic_menu_edit).setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
         menu.add(0, SettingsUtil.MENU_ITEM_SHARE, SettingsUtil.MENU_ITEM_SHARE, getString(R.string.menu_item_share)).setIcon(android.R.drawable.ic_menu_share).setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
-        menu.add(0, SettingsUtil.MENU_ITEM_DELETE, SettingsUtil.MENU_ITEM_DELETE, getString(R.string.menu_item_delete)).setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER);
+        menu.add(0, SettingsUtil.MENU_ITEM_DELETE, SettingsUtil.MENU_ITEM_DELETE, getString(R.string.menu_item_delete)).setIcon(android.R.drawable.ic_menu_delete).setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER);
         menu.add(0, SettingsUtil.MENU_ITEM_SETTINGS, SettingsUtil.MENU_ITEM_SETTINGS, getString(R.string.menu_item_settings)).setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER);
         return true;
     }
@@ -285,8 +235,8 @@ public class DetailActivity extends AppCompatActivity {
                         .show();
                 break;
             case SettingsUtil.MENU_ITEM_SETTINGS:
-                Intent intent = new Intent(this, SettingsActivity.class);
-                startActivity(intent);
+                Intent intentSettings = new Intent(this, SettingsActivity.class);
+                startActivity(intentSettings);
                 break;
             case SettingsUtil.MENU_ITEM_SHARE:
                 AnalyticsUtils.sendScreenImageName(mTracker, DetailActivity.class.getSimpleName() + "-share");
@@ -313,9 +263,22 @@ public class DetailActivity extends AppCompatActivity {
                             }
                         });
                 break;
+            case SettingsUtil.MENU_ITEM_EDIT:
+                Intent intentDetailEdit = new Intent(DetailActivity.this, DetailEditActivity.class);
+                intentDetailEdit.putExtra(DetailActivity.INTENT_EXTRA_DETAIL_FIREBASE_DATABASE_KEY, mKey);
+                startActivityForResult(intentDetailEdit, ACTIVITY_FOR_RESULT_DETAIL_EDIT);
+                break;
 
         }
         return true;
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == ACTIVITY_FOR_RESULT_DETAIL_EDIT) {
+            initializeMexEntryDetails();
+        }
     }
 
     private void initializeFirebase() {
@@ -324,49 +287,9 @@ public class DetailActivity extends AppCompatActivity {
 
         String userId = FirebaseAuth.getInstance().getUid();
         mDetailDatabaseReference = detailDatabase.getReference().child(getString(R.string.users_database)).child(userId).child(getString(R.string.entries_database)).child(mKey);
-        mVenuesDatabaseReference = detailDatabase.getReference().child(getString(R.string.users_database)).child(userId).child(getString(R.string.venues_database));
 
         mStorageReference = mFirebaseStorage.getReference().child(getString(R.string.users_database)).child(userId).child(getString(R.string.entries_database));
     }
-
-//    private void initializeVenuesSpinner() {
-//        mVenueSpinner.setTitle(getString(R.string.select_restaurant));
-//        mVenues = new ArrayList<>();
-//        mVenuesDatabaseReference.addValueEventListener(new ValueEventListener() {
-//            @Override
-//            public void onDataChange(@NonNull DataSnapshot aDataSnapshot) {
-//                for (DataSnapshot dataSnapshot : aDataSnapshot.getChildren()) {
-//                    Venue venue = dataSnapshot.getValue(Venue.class);
-//                    mVenues.add(new Venues(dataSnapshot.getKey(), venue.getName()));
-//                }
-//                ArrayAdapter<Venues> spinnerArrayAdapter = new ArrayAdapter<>(getBaseContext(), android.R.layout.simple_spinner_item, mVenues);
-//                mVenueSpinner.setAdapter(spinnerArrayAdapter);
-//                int currentVenue = -1;
-//                if (mMexEntry != null) {
-//                    currentVenue = Venues.getPositionOfKey(mVenues, mMexEntry.getVenueKey());
-//                }
-//                mVenueSpinner.setSelection(currentVenue);
-//                mVenueSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-//                    @Override
-//                    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-//                        Venues v = (Venues) parent.getItemAtPosition(position);
-//                        mMexEntry.setVenueKey(v.getFirebaseKey());
-//                        mDetailDatabaseReference.setValue(mMexEntry);
-//                    }
-//
-//                    @Override
-//                    public void onNothingSelected(AdapterView<?> parent) {
-//
-//                    }
-//                });
-//            }
-//
-//            @Override
-//            public void onCancelled(@NonNull DatabaseError aDatabaseError) {
-//
-//            }
-//        });
-//    }
 
     private void initializeMexEntryDetails() {
         mDetailDatabaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -410,7 +333,23 @@ public class DetailActivity extends AppCompatActivity {
                             .into(mDetailImageView);
                 }
                 mDetailEditText.setText(mMexEntry.getName());
-                mDetailPriceEditText.setText(String.valueOf(mMexEntry.getPrice()));
+                if (mMexEntry.getPlaceId() != null && !mMexEntry.getPlaceId().isEmpty()) {
+                    mGeoDataClient.getPlaceById(mMexEntry.getPlaceId()).addOnCompleteListener(new OnCompleteListener<PlaceBufferResponse>() {
+                        @Override
+                        public void onComplete(@NonNull Task<PlaceBufferResponse> task) {
+                            if (task.isSuccessful()) {
+                                PlaceBufferResponse places = task.getResult();
+                                Place myPlace = places.get(0);
+                                String formattedDate = MiscUtils.getFormattedDate(mMexEntry.getDate());
+                                mVenueDateTextView.setText(getString(R.string.format_venue_date, formattedDate, myPlace.getName()));
+                                places.release();
+                            } else {
+                                Log.e(TAG, "Place not found.");
+                            }
+                        }
+                    });
+                }
+//                mDetailPriceEditText.setText(String.valueOf(mMexEntry.getPrice()));
                 mDetailRatingBar.setRating(mMexEntry.getRating());
             }
 
@@ -421,9 +360,6 @@ public class DetailActivity extends AppCompatActivity {
         });
     }
 
-    public void onAddNewPhotoMexEntry(View view) {
-        dispatchCameraIntent(RC_IMAGE_CAPTURE_MEX_ENTRY);
-    }
 
     @Override
     protected void onResume() {
@@ -431,153 +367,5 @@ public class DetailActivity extends AppCompatActivity {
         AnalyticsUtils.sendScreenImageName(mTracker, DetailActivity.class.getSimpleName());
     }
 
-    private void dispatchCameraIntent(int aPermissionRequestId) {
-        if (MiscUtils.checkPermissionsAndRequest(new String[]{Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE}, aPermissionRequestId, this)) {
-            ImagePicker.create(this) // Activity or Fragment
-                    .returnMode(ReturnMode.ALL)
-                    .single()
-                    .start();
-        }
-    }
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        switch (requestCode) {
-            case RC_IMAGE_CAPTURE_MEX_ENTRY: {
-                // If request is cancelled, the result arrays are empty.
-                if (grantResults.length > 0
-                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    // permission was granted, yay! Do the
-                    // contacts-related task you need to do.
-                    dispatchCameraIntent(RC_IMAGE_CAPTURE_MEX_ENTRY);
-                } else {
-                    // permission denied, boo! Disable the
-                    // functionality that depends on this permission.
-                }
-            }
-
-            // other 'case' lines to check for other
-            // permissions this app might request.
-        }
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (ImagePicker.shouldHandle(requestCode, resultCode, data)) {
-            Image image = ImagePicker.getFirstImageOrNull(data);
-            Uri selectedImageUri = Uri.fromFile(new File(image.getPath()));
-            mDetailImageView.setImageURI(selectedImageUri);
-            if (mMexEntry.getImageUrl() != null && !mMexEntry.getImageUrl().isEmpty()) {
-                mFirebaseStorage.getReferenceFromUrl(mMexEntry.getImageUrl()).delete();
-            }
-            final StorageReference photoRef = mStorageReference.child(selectedImageUri.getLastPathSegment());
-            UploadTask uploadTask = photoRef.putFile(selectedImageUri);
-            Task<Uri> urlTask = uploadTask.continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
-                @Override
-                public Task<Uri> then(@NonNull Task<UploadTask.TaskSnapshot> aTask) throws Exception {
-                    if (!aTask.isSuccessful()) {
-                        throw aTask.getException();
-                    }
-
-                    // Continue with the task to get the download URL
-                    return photoRef.getDownloadUrl();
-                }
-            }).addOnCompleteListener(new OnCompleteListener<Uri>() {
-                @Override
-                public void onComplete(@NonNull Task<Uri> aTask) {
-                    if (aTask.isSuccessful()) {
-                        // When the image has successfully uploaded, we get its download URL
-                        Uri downloadUri = aTask.getResult();
-                        mMexEntry.setImageUrl(downloadUri.toString());
-                        mDetailDatabaseReference.setValue(mMexEntry);
-                    } else {
-                        // Handle failures
-                        // ...
-                    }
-                }
-            });
-
-        }
-        if (requestCode == PLACE_PICKER_REQUEST && resultCode == RESULT_OK) {
-            Place place = PlacePicker.getPlace(this, data);
-            if (place == null) {
-                Log.i(TAG, "No place selected");
-                return;
-            }
-
-            // Extract the place information from the API
-            String placeName = place.getName().toString();
-            String placeAddress = place.getAddress().toString();
-            String placeID = place.getId();
-
-            mMexEntry.setPlaceId(placeID);
-            mDetailDatabaseReference.setValue(mMexEntry);
-
-            Toast.makeText(this, "Place Name: " + placeName, Toast.LENGTH_LONG).show();
-
-        }
-
-// else {
-//            switch (requestCode) {
-//                case RC_IMAGE_CAPTURE_MEX_ENTRY:
-//                    if (resultCode == RESULT_OK) {
-//                        Bitmap bitmap = (Bitmap) data.getExtras().get("data");
-//                        Uri selectedImageUri = MiscUtils.getImageUrl(this, bitmap);
-//                        mDetailImageView.setImageBitmap(bitmap);
-//                        if (mMexEntry.getImageUrl() != null && !mMexEntry.getImageUrl().isEmpty()) {
-//                            mFirebaseStorage.getReferenceFromUrl(mMexEntry.getImageUrl()).delete();
-//                        }
-//                        final StorageReference photoRef = mStorageReference.child(selectedImageUri.getLastPathSegment());
-//                        UploadTask uploadTask = photoRef.putFile(selectedImageUri);
-//                        Task<Uri> urlTask = uploadTask.continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
-//                            @Override
-//                            public Task<Uri> then(@NonNull Task<UploadTask.TaskSnapshot> aTask) throws Exception {
-//                                if (!aTask.isSuccessful()) {
-//                                    throw aTask.getException();
-//                                }
-//
-//                                // Continue with the task to get the download URL
-//                                return photoRef.getDownloadUrl();
-//                            }
-//                        }).addOnCompleteListener(new OnCompleteListener<Uri>() {
-//                            @Override
-//                            public void onComplete(@NonNull Task<Uri> aTask) {
-//                                if (aTask.isSuccessful()) {
-//                                    // When the image has successfully uploaded, we get its download URL
-//                                    Uri downloadUri = aTask.getResult();
-//                                    mMexEntry.setImageUrl(downloadUri.toString());
-//                                    mDetailDatabaseReference.setValue(mMexEntry);
-//                                } else {
-//                                    // Handle failures
-//                                    // ...
-//                                }
-//                            }
-//                        });
-//                    }
-//                    break;
-//            }
-        //   }
-    }
-
-    public void onUpdateLocationClick(View view) {
-        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED) {
-            //TODO: handle denied location access
-            return;
-        }
-        try {
-            // Start a new Activity for the Place Picker API, this will trigger {@code #onActivityResult}
-            // when a place is selected or with the user cancels.
-            PlacePicker.IntentBuilder builder = new PlacePicker.IntentBuilder();
-            Intent i = builder.build(this);
-            startActivityForResult(i, PLACE_PICKER_REQUEST);
-        } catch (GooglePlayServicesRepairableException e) {
-            Log.e(TAG, String.format("GooglePlayServices Not Available [%s]", e.getMessage()));
-        } catch (GooglePlayServicesNotAvailableException e) {
-            Log.e(TAG, String.format("GooglePlayServices Not Available [%s]", e.getMessage()));
-        } catch (Exception e) {
-            Log.e(TAG, String.format("PlacePicker Exception: %s", e.getMessage()));
-        }
-    }
 }

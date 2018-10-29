@@ -1,4 +1,4 @@
-package net.tirgan.mex.ui.main;
+package net.tirgan.mex.ui.detail;
 
 import android.content.Context;
 import android.net.Uri;

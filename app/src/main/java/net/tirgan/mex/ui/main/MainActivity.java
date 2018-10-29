@@ -1,9 +1,6 @@
 package net.tirgan.mex.ui.main;
 
 import android.Manifest;
-import android.annotation.SuppressLint;
-import android.app.Activity;
-import android.app.ActivityOptions;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -24,10 +21,13 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
-import android.widget.Toast;
 
 import com.firebase.ui.auth.AuthUI;
 import com.google.android.gms.analytics.Tracker;
+import com.google.android.gms.location.places.GeoDataClient;
+import com.google.android.gms.location.places.Place;
+import com.google.android.gms.location.places.PlaceBufferResponse;
+import com.google.android.gms.location.places.Places;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
@@ -35,6 +35,8 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -47,16 +49,16 @@ import net.tirgan.mex.MyFirebaseApp;
 import net.tirgan.mex.R;
 import net.tirgan.mex.geofencing.Geofencing;
 import net.tirgan.mex.model.MexEntry;
-import net.tirgan.mex.model.Venue;
 import net.tirgan.mex.ui.detail.DetailActivity;
+import net.tirgan.mex.ui.detail.DetailEditActivity;
 import net.tirgan.mex.ui.settings.SettingsActivity;
-import net.tirgan.mex.ui.venue.VenueActivity;
 import net.tirgan.mex.utilities.AnalyticsUtils;
 import net.tirgan.mex.utilities.FirebaseUtils;
 import net.tirgan.mex.utilities.JobSchedulingUtils;
 import net.tirgan.mex.utilities.MiscUtils;
 import net.tirgan.mex.utilities.SettingsUtil;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 
@@ -138,7 +140,6 @@ public class MainActivity
         }
     };
     private Tracker mTracker;
-    private boolean mIsAnyVenueAdded;
 
 
     @Override
@@ -273,16 +274,6 @@ public class MainActivity
                     initializeActivity(null);
                 }
                 break;
-            case RC_VENUE:
-                if (resultCode == Activity.RESULT_OK) {
-                    Boolean result = data.getBooleanExtra(VenueActivity.RETURN_INTENT_EXTRA_IS_LOCATION_CHANGED, false);
-                    if (result) {
-                        if (mGeofencing != null) {
-                            mGeofencing.updateGeofenceListAndRegisterAll(FirebaseDatabase.getInstance().getReference());
-                        }
-                    }
-                }
-                break;
         }
 
     }
@@ -301,33 +292,12 @@ public class MainActivity
         AnalyticsUtils.sendScreenImageName(mTracker, MainActivity.class.getSimpleName(), LOG_TAG);
     }
 
-    public void onAddNewVenueClick(View view) {
-        Venue venue = new Venue("", "", FirebaseUtils.DEFAULT_RATING, FirebaseUtils.DEFAULT_LATITUDE, FirebaseUtils.DEFAULT_LONGITUDE);
-        String key = mDatabaseReference.child(getString(R.string.venues_database)).push().getKey();
-        mDatabaseReference.child(getString(R.string.venues_database)).child(key).setValue(venue);
-        startVenueActivity(key, null);
-//        mListFragment.collapseFloatingActionMenu();
-    }
-
-    public void onAddNewEntryClick(View view) {
-        if (mIsAnyVenueAdded) {
-            MexEntry mexEntry = new MexEntry("", "", FirebaseUtils.DEFAULT_RATING, FirebaseUtils.DEFAULT_PRICE, "", new Date().getTime(), "");
-            String key = mDatabaseReference.child(getString(R.string.entries_database)).push().getKey();
-            mDatabaseReference.child(getString(R.string.entries_database)).child(key).setValue(mexEntry);
-            startDetailActivity(key);
-//            mListFragment.collapseFloatingActionMenu();
-        } else {
-            Toast.makeText(this, getString(R.string.first_add_venue), Toast.LENGTH_SHORT).show();
-        }
-    }
-
     public void onAddNewMexClick(View view) {
         MexEntry mexEntry = new MexEntry("", "", FirebaseUtils.DEFAULT_RATING, FirebaseUtils.DEFAULT_PRICE, "", new Date().getTime(), "");
         String key = mDatabaseReference.child(getString(R.string.entries_database)).push().getKey();
         mDatabaseReference.child(getString(R.string.entries_database)).child(key).setValue(mexEntry);
-        startDetailActivity(key);
+        startDetailEditActivity(key);
     }
-
 
 
     @Override
@@ -353,37 +323,16 @@ public class MainActivity
     }
 
 
-    @SuppressLint("RestrictedApi")
-    private void startVenueActivity(String key, View aView) {
-        Intent intent = new Intent(MainActivity.this, VenueActivity.class);
-        intent.putExtra(VenueActivity.INTENT_EXTRA_FIREBASE_DATABASE_KEY, key);
-        if (MiscUtils.LOLLIPOP_AND_HIGHER && aView != null && getResources().getBoolean(R.bool.is_animation_enabled)) {
-            aView.setTransitionName(getString(R.string.shared_element_venue_image_view));
-            Bundle bundle = ActivityOptions.makeSceneTransitionAnimation(MainActivity.this, aView, getString(R.string.shared_element_venue_image_view)).toBundle();
-            if (mIsNotificationsEnabled) {
-                startActivityForResult(intent, RC_VENUE, bundle);
-            } else {
-                startActivity(intent, bundle);
-            }
-        } else {
-            if (mIsNotificationsEnabled) {
-                startActivityForResult(intent, RC_VENUE);
-            } else {
-                startActivity(intent);
-            }
-        }
-    }
-
     private void startDetailActivity(String key) {
         Intent intent = new Intent(MainActivity.this, DetailActivity.class);
         intent.putExtra(DetailActivity.INTENT_EXTRA_DETAIL_FIREBASE_DATABASE_KEY, key);
         startActivity(intent);
     }
 
-
-    @Override
-    public void onVenueImageClick(String key, View aView) {
-        startVenueActivity(key, aView);
+    private void startDetailEditActivity(String key) {
+        Intent intent = new Intent(MainActivity.this, DetailEditActivity.class);
+        intent.putExtra(DetailActivity.INTENT_EXTRA_DETAIL_FIREBASE_DATABASE_KEY, key);
+        startActivity(intent);
     }
 
 
@@ -392,10 +341,6 @@ public class MainActivity
         showSortByDialog();
     }
 
-    @Override
-    public void isAnyVenueAdded(boolean aIsAnyVenueAdded) {
-        mIsAnyVenueAdded = aIsAnyVenueAdded;
-    }
 
     @Override
     public void onMexClick(String aKey) {
@@ -405,14 +350,34 @@ public class MainActivity
     private void markLocationsOnMap() {
         if (MiscUtils.checkPermissionsAndRequest(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, RC_LOCATION, this)) {
 
-            mDatabaseReference.child(getString(R.string.venues_database)).addValueEventListener(new ValueEventListener() {
+            mDatabaseReference.child(getString(R.string.entries_database)).addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot aDataSnapshot) {
+                    ArrayList<String> placeIds = new ArrayList<>();
                     for (DataSnapshot dataSnapshot : aDataSnapshot.getChildren()) {
-                        Venue venue = dataSnapshot.getValue(Venue.class);
-                        LatLng latLng = new LatLng(venue.getLat(), venue.getLon());
-                        mGoogleMap.addMarker(new MarkerOptions().position(latLng).title(venue.getName()));
+                        MexEntry mexEntry = dataSnapshot.getValue(MexEntry.class);
+                        if (!placeIds.contains(mexEntry.getPlaceId())) {
+                            placeIds.add(mexEntry.getPlaceId());
+                        }
                     }
+                    GeoDataClient geoDataClient = Places.getGeoDataClient(getApplicationContext(), null);
+                    for (String placeId : placeIds) {
+                        if (placeId != null && !placeId.isEmpty()) {
+                            geoDataClient.getPlaceById(placeId).addOnCompleteListener(new OnCompleteListener<PlaceBufferResponse>() {
+                                @Override
+                                public void onComplete(@NonNull Task<PlaceBufferResponse> task) {
+                                    if (task.isSuccessful()) {
+                                        PlaceBufferResponse places = task.getResult();
+                                        Place myPlace = places.get(0);
+                                        LatLng latLng = new LatLng(myPlace.getLatLng().latitude, myPlace.getLatLng().longitude);
+                                        mGoogleMap.addMarker(new MarkerOptions().position(latLng).title(myPlace.getName().toString()));
+                                        places.release();
+                                    }
+                                }
+                            });
+                        }
+                    }
+
                 }
 
                 @Override

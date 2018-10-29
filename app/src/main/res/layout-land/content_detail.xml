@@ -44,7 +44,7 @@
         android:layout_weight="1">
 
         <include
-            layout="@layout/fragment_details_detail_activity"
+            layout="@layout/dialog_fragment_details_detail_activity"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
     </ScrollView>

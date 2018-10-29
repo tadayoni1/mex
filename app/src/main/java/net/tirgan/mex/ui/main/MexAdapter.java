@@ -3,7 +3,6 @@ package net.tirgan.mex.ui.main;
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.v4.util.Pair;
-import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -11,9 +10,14 @@ import android.view.ViewGroup;
 import android.widget.Filter;
 import android.widget.Filterable;
 import android.widget.ImageView;
-import android.widget.RatingBar;
 import android.widget.TextView;
 
+import com.google.android.gms.location.places.GeoDataClient;
+import com.google.android.gms.location.places.Place;
+import com.google.android.gms.location.places.PlaceBufferResponse;
+import com.google.android.gms.location.places.Places;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -25,6 +29,7 @@ import com.squareup.picasso.Picasso;
 import net.tirgan.mex.R;
 import net.tirgan.mex.model.MexEntry;
 import net.tirgan.mex.utilities.FirebaseUtils;
+import net.tirgan.mex.utilities.MiscUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -74,7 +79,6 @@ public class MexAdapter extends RecyclerView.Adapter<MexAdapter.MexAdapterViewHo
     }
 
 
-
     @NonNull
     @Override
     public MexAdapterViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -85,7 +89,7 @@ public class MexAdapter extends RecyclerView.Adapter<MexAdapter.MexAdapterViewHo
     }
 
     @Override
-    public void onBindViewHolder(@NonNull MexAdapterViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull final MexAdapterViewHolder holder, int position) {
         final Pair<MexEntry, String> mexEntryPairs = mMexEntryPairs.get(position);
 
         if (mexEntryPairs.first.getImageUrl() != null && !mexEntryPairs.first.getImageUrl().isEmpty()) {
@@ -97,8 +101,33 @@ public class MexAdapter extends RecyclerView.Adapter<MexAdapter.MexAdapterViewHo
                     .load(FirebaseUtils.MEX_ENTRY_DEFAULT_IMAGE_DOWNLOAD_URL)
                     .into(holder.mMexEntryImageView);
         }
-        holder.mMexEntryTextView.setText(mexEntryPairs.first.getName());
-        holder.mMexEntryRatingBar.setRating(mexEntryPairs.first.getRating());
+        String name = mexEntryPairs.first.getName();
+        if(name.length()> 18) {
+            name = name.substring(0, 18) + "...";
+        }
+        holder.mMexEntryTextView.setText(name);
+        holder.mMexEntryRatingTextView.setText(mContext.getString(R.string.format_rating_text_view, String.valueOf(mexEntryPairs.first.getRating())));
+
+        holder.mMexEntryDateTextView.setText(MiscUtils.getFormattedDate(mexEntryPairs.first.getDate()));
+
+//        int randomColor = ColorGenerator.MATERIAL.getRandomColor();
+//        int randomColorWithTransparency = Color.argb(210, Color.red(randomColor), Color.green(randomColor), Color.blue(randomColor));
+//        holder.mMexListItemCardView.setCardBackgroundColor(randomColorWithTransparency);
+
+        if (mexEntryPairs.first.getPlaceId() != null && !mexEntryPairs.first.getPlaceId().isEmpty()) {
+            GeoDataClient geoDataClient = Places.getGeoDataClient(mContext, null);
+            geoDataClient.getPlaceById(mexEntryPairs.first.getPlaceId()).addOnCompleteListener(new OnCompleteListener<PlaceBufferResponse>() {
+                @Override
+                public void onComplete(@NonNull Task<PlaceBufferResponse> task) {
+                    if (task.isSuccessful()) {
+                        PlaceBufferResponse places = task.getResult();
+                        Place myPlace = places.get(0);
+                        holder.mMexEntryVenueTextView.setText(myPlace.getName());
+                        places.release();
+                    }
+                }
+            });
+        }
 
     }
 
@@ -119,17 +148,20 @@ public class MexAdapter extends RecyclerView.Adapter<MexAdapter.MexAdapterViewHo
     public class MexAdapterViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         public final ImageView mMexEntryImageView;
         public final TextView mMexEntryTextView;
-        public final RatingBar mMexEntryRatingBar;
-        public final CardView mMexListItemCardView;
+        public final TextView mMexEntryVenueTextView;
+        public final TextView mMexEntryRatingTextView;
+        public final TextView mMexEntryDateTextView;
 
         public MexAdapterViewHolder(View itemView) {
             super(itemView);
             mMexEntryImageView = itemView.findViewById(R.id.mex_entry_lv_iv);
             mMexEntryTextView = itemView.findViewById(R.id.mex_entry_lv_tv);
-            mMexEntryRatingBar = itemView.findViewById(R.id.mex_entry_lv_rb);
-            mMexListItemCardView = itemView.findViewById(R.id.mex_list_item_cv);
+            mMexEntryVenueTextView = itemView.findViewById(R.id.mex_venue_lv_tv);
+            mMexEntryRatingTextView = itemView.findViewById(R.id.mex_entry_rating_tv);
+            mMexEntryDateTextView = itemView.findViewById(R.id.mex_entry_date);
 
-            mMexEntryImageView.setOnClickListener(this);
+
+            itemView.setOnClickListener(this);
         }
 
         @Override

@@ -21,9 +21,12 @@ import net.tirgan.mex.ui.main.VenuesAdapter;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 public class MiscUtils {
 
@@ -104,4 +107,9 @@ public class MiscUtils {
         return typedValue.getFloat();
     }
 
+    public static String getFormattedDate(long dateLong) {
+        Date date = new Date(dateLong);
+        SimpleDateFormat sdf = new SimpleDateFormat("MMMM dd, yyyy", Locale.US);
+        return sdf.format(date);
+    }
 }

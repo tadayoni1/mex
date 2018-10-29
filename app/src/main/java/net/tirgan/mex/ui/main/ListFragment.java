@@ -23,7 +23,7 @@ import net.tirgan.mex.utilities.SettingsUtil;
 
 public class ListFragment
         extends Fragment
-        implements VenuesAdapter.VenuesAdapterOnClickHandler, VenuesAdapter.VenuesAdapterListener, MexAdapter.MexAdapterOnClickHandler {
+        implements  MexAdapter.MexAdapterOnClickHandler {
 
 
     private RecyclerView mRecyclerView;
@@ -40,11 +40,8 @@ public class ListFragment
 
 
     public interface ListFragmentOnClickHandler {
-        void onVenueImageClick(String key, View aView);
 
         void onSortByImageButtonClick();
-
-        void isAnyVenueAdded(boolean aIsAnyVenueAdded);
 
         void onMexClick(String aKey);
     }
@@ -60,11 +57,6 @@ public class ListFragment
             throw new ClassCastException(context.toString()
                     + " must implement ListFragmentOnClickHandler");
         }
-    }
-
-    @Override
-    public void isAnyVenueAdded(boolean aIsAnyVenueAdded) {
-        mClickHandler.isAnyVenueAdded(aIsAnyVenueAdded);
     }
 
     public ListFragment() {
@@ -94,7 +86,7 @@ public class ListFragment
         mRecyclerView = rootView.findViewById(R.id.venues_rv);
 
         // TODO: span count
-        GridLayoutManager layoutManager = new GridLayoutManager(getContext(), 3);
+        GridLayoutManager layoutManager = new GridLayoutManager(getContext(), 2);
         mRecyclerView.setLayoutManager(layoutManager);
         mMexAdapter = new MexAdapter(getContext(), this);
         mRecyclerView.setAdapter(mMexAdapter);
@@ -125,10 +117,6 @@ public class ListFragment
         return rootView;
     }
 
-    @Override
-    public void onVenueImageClick(String key, View aView) {
-        mClickHandler.onVenueImageClick(key, aView);
-    }
 
     public void setSortAndFilter(int aSortBy, float aFilterByMinRating) {
 //        mVenuesAdapter.setSortAndFilter(aSortBy, aFilterByMinRating);

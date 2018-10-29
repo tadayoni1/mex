@@ -24,8 +24,8 @@ public class GeofenceBroadcastReceiver extends BroadcastReceiver {
         if (geofenceTransition == GeofencingRequest.INITIAL_TRIGGER_ENTER) {
             List<Geofence> triggeringGeofences = geofencingEvent.getTriggeringGeofences();
             for (Geofence geofence: triggeringGeofences) {
-                String venue_key = geofence.getRequestId();
-                NotificationUtils.remindUserWhenEnteredARestaurant(context, venue_key);
+                String placeId = geofence.getRequestId();
+                NotificationUtils.remindUserWhenEnteredARestaurant(context, placeId);
             }
         }
 
