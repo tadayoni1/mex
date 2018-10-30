@@ -293,7 +293,7 @@ public class MainActivity
     }
 
     public void onAddNewMexClick(View view) {
-        MexEntry mexEntry = new MexEntry("", "", FirebaseUtils.DEFAULT_RATING, FirebaseUtils.DEFAULT_PRICE, "", new Date().getTime(), "");
+        MexEntry mexEntry = new MexEntry("", FirebaseUtils.DEFAULT_RATING, FirebaseUtils.DEFAULT_PRICE, "", new Date().getTime(), "");
         String key = mDatabaseReference.child(getString(R.string.entries_database)).push().getKey();
         mDatabaseReference.child(getString(R.string.entries_database)).child(key).setValue(mexEntry);
         startDetailEditActivity(key);
@@ -323,7 +323,8 @@ public class MainActivity
     }
 
 
-    private void startDetailActivity(String key) {
+    private void startDetailActivity(String key, View aView) {
+        //TODO: handle aView for anitmation
         Intent intent = new Intent(MainActivity.this, DetailActivity.class);
         intent.putExtra(DetailActivity.INTENT_EXTRA_DETAIL_FIREBASE_DATABASE_KEY, key);
         startActivity(intent);
@@ -341,11 +342,11 @@ public class MainActivity
         showSortByDialog();
     }
 
-
     @Override
-    public void onMexClick(String aKey) {
-        startDetailActivity(aKey);
+    public void onMexClick(String aKey, View aView) {
+        startDetailActivity(aKey, aView);
     }
+
 
     private void markLocationsOnMap() {
         if (MiscUtils.checkPermissionsAndRequest(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, RC_LOCATION, this)) {

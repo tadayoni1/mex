@@ -37,16 +37,25 @@ import java.util.List;
 public class MexAdapter extends RecyclerView.Adapter<MexAdapter.MexAdapterViewHolder>
         implements Filterable {
 
+
+    public static final int SORT_BY_ENTRY_DATE = 1;
+    public static final int SORT_BY_NAME = 2;
+    public static final int SORT_BY_RATING = 3;
+
+    private int mSortBy;
+    private float mFilterByMinRating;
+
     private final Context mContext;
     private final DatabaseReference mEntriesDatabaseReference;
+
     private List<Pair<MexEntry, String>> mMexEntryPairs;
+    private List<Pair<MexEntry, String>> mMexEntryPairsFiltered;
 
     private final MexAdapterOnClickHandler mClickHandler;
 
     public interface MexAdapterOnClickHandler {
-        void onMexClick(String aKey);
+        void onMexClick(String aKey, View aView);
     }
-
 
     public MexAdapter(Context aContext, MexAdapterOnClickHandler aClickHandler) {
         mContext = aContext;
@@ -58,6 +67,10 @@ public class MexAdapter extends RecyclerView.Adapter<MexAdapter.MexAdapterViewHo
                 .child(userId)
                 .child(mContext.getString(R.string.entries_database));
 
+        mFilterByMinRating = 0;
+        mSortBy = 1;
+
+
         mEntriesDatabaseReference.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot aDataSnapshot) {
@@ -67,6 +80,7 @@ public class MexAdapter extends RecyclerView.Adapter<MexAdapter.MexAdapterViewHo
                     String key = dataSnapshot.getKey();
                     mMexEntryPairs.add(new Pair<>(mexEntry, key));
                 }
+                mMexEntryPairsFiltered = mMexEntryPairs;
                 notifyDataSetChanged();
             }
 
@@ -90,7 +104,7 @@ public class MexAdapter extends RecyclerView.Adapter<MexAdapter.MexAdapterViewHo
 
     @Override
     public void onBindViewHolder(@NonNull final MexAdapterViewHolder holder, int position) {
-        final Pair<MexEntry, String> mexEntryPairs = mMexEntryPairs.get(position);
+        final Pair<MexEntry, String> mexEntryPairs = mMexEntryPairsFiltered.get(position);
 
         if (mexEntryPairs.first.getImageUrl() != null && !mexEntryPairs.first.getImageUrl().isEmpty()) {
             Picasso.get()
@@ -102,7 +116,7 @@ public class MexAdapter extends RecyclerView.Adapter<MexAdapter.MexAdapterViewHo
                     .into(holder.mMexEntryImageView);
         }
         String name = mexEntryPairs.first.getName();
-        if(name.length()> 18) {
+        if (name.length() > 18) {
             name = name.substring(0, 18) + "...";
         }
         holder.mMexEntryTextView.setText(name);
@@ -133,16 +147,54 @@ public class MexAdapter extends RecyclerView.Adapter<MexAdapter.MexAdapterViewHo
 
     @Override
     public int getItemCount() {
-        if (mMexEntryPairs == null) {
+        if (mMexEntryPairsFiltered == null) {
             return 0;
         } else {
-            return mMexEntryPairs.size();
+            return mMexEntryPairsFiltered.size();
         }
     }
 
+    public void setSortAndFilter(int aSortBy, float aFilterByMinRating) {
+        mSortBy = aSortBy;
+        mFilterByMinRating = aFilterByMinRating;
+    }
+
+
     @Override
     public Filter getFilter() {
-        return null;
+        return new Filter() {
+            @Override
+            protected FilterResults performFiltering(CharSequence constraint) {
+                String constraintString = constraint.toString().toLowerCase();
+                List<Pair<MexEntry, String>> mexEntryPairs = new ArrayList<>(mMexEntryPairs);
+
+                // Sort
+                // if mSortBy equals to MexAdapter.SORT_BY_ENTRY_DATE then we don't need to sort.
+                // All new sort options must have a value greater than MexAdapter.SORT_BY_ENTRY_DATE
+                if (mSortBy > MexAdapter.SORT_BY_ENTRY_DATE) {
+                    mexEntryPairs = MiscUtils.sortMexEntries(mexEntryPairs, mSortBy);
+                }
+
+                mMexEntryPairsFiltered = new ArrayList<>();
+                for (int i = 0; i < mexEntryPairs.size(); i++) {
+                    // Filter
+                    if (mexEntryPairs.get(i).first.getRating() >= mFilterByMinRating) {
+                        // Search
+                        if (mexEntryPairs.get(i).first.getName().toLowerCase().contains(constraintString)) {
+                            mMexEntryPairsFiltered.add(mexEntryPairs.get(i));
+                        }
+                    }
+                }
+                return null;
+            }
+
+
+            @Override
+            protected void publishResults(CharSequence constraint, FilterResults results) {
+                notifyDataSetChanged();
+            }
+        };
+
     }
 
     public class MexAdapterViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
@@ -151,6 +203,7 @@ public class MexAdapter extends RecyclerView.Adapter<MexAdapter.MexAdapterViewHo
         public final TextView mMexEntryVenueTextView;
         public final TextView mMexEntryRatingTextView;
         public final TextView mMexEntryDateTextView;
+
 
         public MexAdapterViewHolder(View itemView) {
             super(itemView);
@@ -167,7 +220,12 @@ public class MexAdapter extends RecyclerView.Adapter<MexAdapter.MexAdapterViewHo
         @Override
         public void onClick(View v) {
             int adapterPosition = getAdapterPosition();
-            mClickHandler.onMexClick(mMexEntryPairs.get(adapterPosition).second);
+            // if entry has a picture then pass v to open detail activity with an animation, otherwise pass null to skip animation
+            if (mMexEntryPairsFiltered.get(adapterPosition).first.getImageUrl() != null && !mMexEntryPairsFiltered.get(adapterPosition).first.getImageUrl().isEmpty()) {
+                mClickHandler.onMexClick(mMexEntryPairsFiltered.get(adapterPosition).second, v);
+            } else {
+                mClickHandler.onMexClick(mMexEntryPairsFiltered.get(adapterPosition).second, null);
+            }
         }
     }
 }

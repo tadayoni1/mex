@@ -34,8 +34,8 @@ public class ListFragment
     private ListFragmentOnClickHandler mClickHandler;
 
     @Override
-    public void onMexClick(String aKey) {
-        mClickHandler.onMexClick(aKey);
+    public void onMexClick(String aKey, View aView) {
+        mClickHandler.onMexClick(aKey, aView);
     }
 
 
@@ -43,7 +43,7 @@ public class ListFragment
 
         void onSortByImageButtonClick();
 
-        void onMexClick(String aKey);
+        void onMexClick(String aKey, View aView);
     }
 
 
@@ -83,7 +83,7 @@ public class ListFragment
         mSearchView = rootView.findViewById(R.id.fragment_list_sv);
         ImageButton sortByImageButton = rootView.findViewById(R.id.sort_by_ib);
 
-        mRecyclerView = rootView.findViewById(R.id.venues_rv);
+        mRecyclerView = rootView.findViewById(R.id.mex_rv);
 
         // TODO: span count
         GridLayoutManager layoutManager = new GridLayoutManager(getContext(), 2);
@@ -92,35 +92,35 @@ public class ListFragment
         mRecyclerView.setAdapter(mMexAdapter);
 
 
-//        mSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-//            @Override
-//            public boolean onQueryTextSubmit(String query) {
-//                mVenuesAdapter.getFilter().filter(query);
-//                return false;
-//            }
-//
-//            @Override
-//            public boolean onQueryTextChange(String newText) {
-//                mVenuesAdapter.getFilter().filter(newText);
-//                return false;
-//            }
-//        });
-//
-//        sortByImageButton.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                // opens sort/filter fragment
-//                mClickHandler.onSortByImageButtonClick();
-//            }
-//        });
+        mSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                mMexAdapter.getFilter().filter(query);
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                mMexAdapter.getFilter().filter(newText);
+                return false;
+            }
+        });
+
+        sortByImageButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // opens sort/filter fragment
+                mClickHandler.onSortByImageButtonClick();
+            }
+        });
 
         return rootView;
     }
 
 
     public void setSortAndFilter(int aSortBy, float aFilterByMinRating) {
-//        mVenuesAdapter.setSortAndFilter(aSortBy, aFilterByMinRating);
-//        mVenuesAdapter.getFilter().filter(mSearchView.getQuery());
+        mMexAdapter.setSortAndFilter(aSortBy, aFilterByMinRating);
+        mMexAdapter.getFilter().filter(mSearchView.getQuery());
     }
 
 //    public void collapseFloatingActionMenu() {

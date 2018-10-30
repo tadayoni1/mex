@@ -15,8 +15,8 @@ import android.util.TypedValue;
 
 import com.esafirm.imagepicker.model.Image;
 
-import net.tirgan.mex.model.Venue;
-import net.tirgan.mex.ui.main.VenuesAdapter;
+import net.tirgan.mex.model.MexEntry;
+import net.tirgan.mex.ui.main.MexAdapter;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -82,23 +82,23 @@ public class MiscUtils {
                 aPermissionRequestId);
     }
 
-    public static List<Pair<Venue, String>> sortVenues(List<Pair<Venue, String>> aVenuePairs, final int aSortBy) {
-        Collections.sort(aVenuePairs, new Comparator<Pair<Venue, String>>() {
+    public static List<Pair<MexEntry, String>> sortMexEntries(List<Pair<MexEntry, String>> aMexEntryPairs, final int aSortBy) {
+        Collections.sort(aMexEntryPairs, new Comparator<Pair<MexEntry, String>>() {
             @Override
-            public int compare(Pair<Venue, String> aVenuePair1, Pair<Venue, String> aVenuePair2) {
+            public int compare(Pair<MexEntry, String> aMexEntryPair1, Pair<MexEntry, String> aMexEntryPair2) {
                 switch (aSortBy) {
-                    case VenuesAdapter.SORT_BY_RATING:
-                        return (int) (aVenuePair2.first.getRating() - aVenuePair1.first.getRating());
-                    case VenuesAdapter.SORT_BY_NAME:
-                        return aVenuePair1.first.getName().compareTo(aVenuePair2.first.getName());
-                    case VenuesAdapter.SORT_BY_ENTRY_DATE:
+                    case MexAdapter.SORT_BY_RATING:
+                        return (int) (aMexEntryPair2.first.getRating() - aMexEntryPair1.first.getRating());
+                    case MexAdapter.SORT_BY_NAME:
+                        return aMexEntryPair1.first.getName().compareTo(aMexEntryPair2.first.getName());
+                    case MexAdapter.SORT_BY_ENTRY_DATE:
                         return 0;
                 }
                 return 0;
             }
         });
 
-        return aVenuePairs;
+        return aMexEntryPairs;
     }
 
     public static float getFloat(int aR, Context aContext) {

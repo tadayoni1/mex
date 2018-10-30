@@ -84,16 +84,16 @@ public class SortByDialogFragment extends DialogFragment {
                         int sortBy;
                         switch (mSortByRadioGroup.getCheckedRadioButtonId()) {
                             case R.id.sort_by_name_rb:
-                                sortBy = VenuesAdapter.SORT_BY_NAME;
+                                sortBy = MexAdapter.SORT_BY_NAME;
                                 break;
                             case R.id.sort_by_rating_rb:
-                                sortBy = VenuesAdapter.SORT_BY_RATING;
+                                sortBy = MexAdapter.SORT_BY_RATING;
                                 break;
                             case R.id.sort_by_entry_date:
-                                sortBy = VenuesAdapter.SORT_BY_ENTRY_DATE;
+                                sortBy = MexAdapter.SORT_BY_ENTRY_DATE;
                                 break;
                             default:
-                                sortBy = VenuesAdapter.SORT_BY_ENTRY_DATE;
+                                sortBy = MexAdapter.SORT_BY_ENTRY_DATE;
                         }
                         SettingsUtil.savePrefSortAndFilter(getContext(), sortBy, mFilterByRatingBar.getRating());
                         mListener.onDialogPositiveClick(sortBy, mFilterByRatingBar.getRating());

@@ -5,7 +5,6 @@ import android.os.Parcelable;
 
 public class MexEntry implements Parcelable {
 
-    private String mVenueKey;
     private String mName;
     private float mRating;
     private float mPrice;
@@ -16,8 +15,7 @@ public class MexEntry implements Parcelable {
     public MexEntry() {
     }
 
-    public MexEntry(String aVenueKey, String aName, float aRating, float aPrice, String aImageUrl, long aDate, String aPlaceId) {
-        mVenueKey = aVenueKey;
+    public MexEntry(String aName, float aRating, float aPrice, String aImageUrl, long aDate, String aPlaceId) {
         mName = aName;
         mRating = aRating;
         mPrice = aPrice;
@@ -27,7 +25,6 @@ public class MexEntry implements Parcelable {
     }
 
     protected MexEntry(Parcel in) {
-        mVenueKey = in.readString();
         mName = in.readString();
         mRating = in.readFloat();
         mPrice = in.readFloat();
@@ -47,14 +44,6 @@ public class MexEntry implements Parcelable {
             return new MexEntry[size];
         }
     };
-
-    public String getVenueKey() {
-        return mVenueKey;
-    }
-
-    public void setVenueKey(String aVenueKey) {
-        mVenueKey = aVenueKey;
-    }
 
     public String getName() {
         return mName;
@@ -103,7 +92,6 @@ public class MexEntry implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(mVenueKey);
         dest.writeString(mName);
         dest.writeFloat(mRating);
         dest.writeFloat(mPrice);

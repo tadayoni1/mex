@@ -21,8 +21,6 @@ import com.google.android.gms.location.places.Places;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
 
 import net.tirgan.mex.R;
 import net.tirgan.mex.ui.main.MainActivity;
@@ -36,8 +34,6 @@ public class NotificationUtils {
     public static void remindUserWhenEnteredARestaurant(final Context aContext, String aPlaceId) {
         final NotificationManager notificationManager = (NotificationManager) aContext.getSystemService(Context.NOTIFICATION_SERVICE);
         final String userId = FirebaseAuth.getInstance().getUid();
-        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference().
-                child(aContext.getString(R.string.users_database)).child(userId).child(aContext.getString(R.string.venues_database)).child(aPlaceId);
 
         GeoDataClient geoDataClient = Places.getGeoDataClient(aContext, null);
         geoDataClient.getPlaceById(aPlaceId).addOnCompleteListener(new OnCompleteListener<PlaceBufferResponse>() {

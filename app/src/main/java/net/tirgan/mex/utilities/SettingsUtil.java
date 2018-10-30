@@ -5,7 +5,7 @@ import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 
 import net.tirgan.mex.R;
-import net.tirgan.mex.ui.main.VenuesAdapter;
+import net.tirgan.mex.ui.main.MexAdapter;
 
 public class SettingsUtil {
 
@@ -31,16 +31,16 @@ public class SettingsUtil {
 
     public static int readPrefSort(Context aContext) {
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(aContext);
-        return sp.getInt(SettingsUtil.PREF_SORT_BY, VenuesAdapter.SORT_BY_ENTRY_DATE);
+        return sp.getInt(SettingsUtil.PREF_SORT_BY, MexAdapter.SORT_BY_ENTRY_DATE);
     }
 
     public static int findIdForRadioButton(int aSortBy) {
         switch (aSortBy) {
-            case VenuesAdapter.SORT_BY_ENTRY_DATE:
+            case MexAdapter.SORT_BY_ENTRY_DATE:
                 return R.id.sort_by_entry_date;
-            case VenuesAdapter.SORT_BY_NAME:
+            case MexAdapter.SORT_BY_NAME:
                 return R.id.sort_by_name_rb;
-            case VenuesAdapter.SORT_BY_RATING:
+            case MexAdapter.SORT_BY_RATING:
                 return R.id.sort_by_rating_rb;
         }
         return R.id.sort_by_entry_date;
