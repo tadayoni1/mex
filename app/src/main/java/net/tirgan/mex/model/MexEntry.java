@@ -11,17 +11,19 @@ public class MexEntry implements Parcelable {
     private String mImageUrl;
     private long mDate;
     private String mPlaceId;
+    private String mComment;
 
     public MexEntry() {
     }
 
-    public MexEntry(String aName, float aRating, float aPrice, String aImageUrl, long aDate, String aPlaceId) {
+    public MexEntry(String aName, float aRating, float aPrice, String aImageUrl, long aDate, String aPlaceId, String aComment) {
         mName = aName;
         mRating = aRating;
         mPrice = aPrice;
         mImageUrl = aImageUrl;
         mDate = aDate;
         mPlaceId = aPlaceId;
+        mComment = aComment;
     }
 
     protected MexEntry(Parcel in) {
@@ -31,6 +33,7 @@ public class MexEntry implements Parcelable {
         mImageUrl = in.readString();
         mDate = in.readLong();
         mPlaceId = in.readString();
+        mComment = in.readString();
     }
 
     public static final Creator<MexEntry> CREATOR = new Creator<MexEntry>() {
@@ -85,6 +88,22 @@ public class MexEntry implements Parcelable {
         mDate = aDate;
     }
 
+    public String getPlaceId() {
+        return mPlaceId;
+    }
+
+    public void setPlaceId(String aPlaceId) {
+        mPlaceId = aPlaceId;
+    }
+
+    public String getComment() {
+        return mComment;
+    }
+
+    public void setComment(String aComment) {
+        mComment = aComment;
+    }
+
     @Override
     public int describeContents() {
         return 0;
@@ -98,13 +117,7 @@ public class MexEntry implements Parcelable {
         dest.writeString(mImageUrl);
         dest.writeLong(mDate);
         dest.writeString(mPlaceId);
+        dest.writeString(mComment);
     }
 
-    public String getPlaceId() {
-        return mPlaceId;
-    }
-
-    public void setPlaceId(String aPlaceId) {
-        mPlaceId = aPlaceId;
-    }
 }

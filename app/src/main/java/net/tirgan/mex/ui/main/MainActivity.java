@@ -293,7 +293,7 @@ public class MainActivity
     }
 
     public void onAddNewMexClick(View view) {
-        MexEntry mexEntry = new MexEntry("", FirebaseUtils.DEFAULT_RATING, FirebaseUtils.DEFAULT_PRICE, "", new Date().getTime(), "");
+        MexEntry mexEntry = new MexEntry("", FirebaseUtils.DEFAULT_RATING, FirebaseUtils.DEFAULT_PRICE, "", new Date().getTime(), "", "");
         String key = mDatabaseReference.child(getString(R.string.entries_database)).push().getKey();
         mDatabaseReference.child(getString(R.string.entries_database)).child(key).setValue(mexEntry);
         startDetailEditActivity(key);

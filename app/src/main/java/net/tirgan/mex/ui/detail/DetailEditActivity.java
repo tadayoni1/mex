@@ -92,6 +92,8 @@ public class DetailEditActivity extends AppCompatActivity {
     @BindView(R.id.detail_pick_venue_et)
     EditText mDetailPickVenueEditText;
 
+    @BindView(R.id.detail_edit_comment_et)
+    EditText mDetailEditCommentEditText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -183,6 +185,25 @@ public class DetailEditActivity extends AppCompatActivity {
                 mDetailDatabaseReference.setValue(mMexEntry);
             }
         });
+
+        mDetailEditCommentEditText.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                if (!hasFocus) {
+                    mMexEntry.setComment(mDetailEditCommentEditText.getText().toString());
+                    mDetailDatabaseReference.setValue(mMexEntry);
+                }
+            }
+        });
+    }
+
+    @Override
+    protected void onStop() {
+        if (!mMexEntry.getComment().equals(mDetailEditText.getText())) {
+            mMexEntry.setComment(mDetailEditCommentEditText.getText().toString());
+            mDetailDatabaseReference.setValue(mMexEntry);
+        }
+        super.onStop();
     }
 
     public void onUpdateLocationClick(View view) {
@@ -376,6 +397,8 @@ public class DetailEditActivity extends AppCompatActivity {
                 }
                 mDetailPriceEditText.setText(String.valueOf(mMexEntry.getPrice()));
                 mDetailRatingBar.setRating(mMexEntry.getRating());
+
+                mDetailEditCommentEditText.setText(mMexEntry.getComment());
             }
 
             @Override

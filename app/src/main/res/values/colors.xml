@@ -10,6 +10,7 @@
 
     <color name="colorSecondary">#afc5a1</color>
     <color name="colorSecondaryWithTransparency">#d2afc5a1</color>
+    <color name="colorPrimaryWithTransparency">#2228212E</color>
 
     <color name="colorAccentPressed">#cf4ab8</color>
     <color name="colorPrimaryLight">#bfd6b2</color>

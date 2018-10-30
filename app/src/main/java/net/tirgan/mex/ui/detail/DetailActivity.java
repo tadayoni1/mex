@@ -11,6 +11,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.Toolbar;
 import android.transition.Fade;
 import android.util.Log;
@@ -80,15 +81,14 @@ public class DetailActivity extends AppCompatActivity {
     @BindView(R.id.mex_venue_date_tv)
     TextView mVenueDateTextView;
 
+    @BindView(R.id.mex_price_tv)
+    TextView mMexPriceTextView;
 
-//    @BindView(R.id.mex_title_tv)
-//    EditText mDetailEditText;
+    @BindView(R.id.detail_comment_cv)
+    CardView mDetailCommentCardView;
 
-//    @BindView(R.id.detail_price_et)
-//    EditText mDetailPriceEditText;
-
-//    @BindView(R.id.detail_venue_spinner)
-//    SearchableSpinner mVenueSpinner;
+    @BindView(R.id.detail_comment_tv)
+    TextView mDetailCommentTextView;
 
     private DatabaseReference mDetailDatabaseReference;
     private FirebaseStorage mFirebaseStorage;
@@ -101,6 +101,7 @@ public class DetailActivity extends AppCompatActivity {
 
     private boolean mIsDefaultImageLoaded;
     private GeoDataClient mGeoDataClient;
+    private Toolbar mToolbar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -179,11 +180,10 @@ public class DetailActivity extends AppCompatActivity {
 
         initializeMexEntryDetails();
 
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        toolbar.setTitle(" ");
-        setSupportActionBar(toolbar);
-        toolbar.setNavigationIcon(android.support.v7.appcompat.R.drawable.abc_ic_ab_back_material);
-        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
+        mToolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(mToolbar);
+        mToolbar.setNavigationIcon(android.support.v7.appcompat.R.drawable.abc_ic_ab_back_material);
+        mToolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 onBackPressed();
@@ -298,7 +298,6 @@ public class DetailActivity extends AppCompatActivity {
                 mMexEntry = aDataSnapshot.getValue(MexEntry.class);
                 if (mMexEntry.getImageUrl() != null && !mMexEntry.getImageUrl().isEmpty()) {
                     mIsDefaultImageLoaded = false;
-                    mDetailImageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
                     if (MiscUtils.LOLLIPOP_AND_HIGHER && getResources().getBoolean(R.bool.is_animation_enabled)) {
                         mDetailImageView.setTransitionName(getString(R.string.shared_element_mex_entry_image_view));
                     }
@@ -326,13 +325,14 @@ public class DetailActivity extends AppCompatActivity {
                     Picasso.get().load(mMexEntry.getImageUrl()).into(target);
                     mDetailImageView.setTag(target);
                 } else {
+                    mToolbar.setBackgroundColor(getResources().getColor(R.color.colorPrimaryWithTransparency));
                     mIsDefaultImageLoaded = true;
-                    mDetailImageView.setScaleType(ImageView.ScaleType.CENTER);
                     Picasso.get()
                             .load(FirebaseUtils.MEX_ENTRY_DEFAULT_IMAGE_DOWNLOAD_URL)
                             .into(mDetailImageView);
                 }
                 mDetailEditText.setText(mMexEntry.getName());
+                final String formattedDate = MiscUtils.getFormattedDate(mMexEntry.getDate());
                 if (mMexEntry.getPlaceId() != null && !mMexEntry.getPlaceId().isEmpty()) {
                     mGeoDataClient.getPlaceById(mMexEntry.getPlaceId()).addOnCompleteListener(new OnCompleteListener<PlaceBufferResponse>() {
                         @Override
@@ -340,17 +340,24 @@ public class DetailActivity extends AppCompatActivity {
                             if (task.isSuccessful()) {
                                 PlaceBufferResponse places = task.getResult();
                                 Place myPlace = places.get(0);
-                                String formattedDate = MiscUtils.getFormattedDate(mMexEntry.getDate());
                                 mVenueDateTextView.setText(getString(R.string.format_venue_date, formattedDate, myPlace.getName()));
                                 places.release();
                             } else {
+                                mVenueDateTextView.setText(formattedDate);
                                 Log.e(TAG, "Place not found.");
                             }
                         }
                     });
+                } else {
+                    mVenueDateTextView.setText(formattedDate);
                 }
-//                mDetailPriceEditText.setText(String.valueOf(mMexEntry.getPrice()));
+                mMexPriceTextView.setText(getString(R.string.format_price, String.valueOf(mMexEntry.getPrice())));
                 mDetailRatingBar.setRating(mMexEntry.getRating());
+                if (mMexEntry.getComment() == null || mMexEntry.getComment().isEmpty()) {
+                    mDetailCommentCardView.setVisibility(View.GONE);
+                } else {
+                    mDetailCommentTextView.setText(mMexEntry.getComment());
+                }
             }
 
             @Override
