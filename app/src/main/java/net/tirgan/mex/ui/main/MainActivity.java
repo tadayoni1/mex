@@ -349,7 +349,7 @@ public class MainActivity
 
 
     private void markLocationsOnMap() {
-        if (MiscUtils.checkPermissionsAndRequest(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, RC_LOCATION, this)) {
+        if (MiscUtils.checkPermissionsAndRequest(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, RC_LOCATION, this)) {
 
             mDatabaseReference.child(getString(R.string.entries_database)).addValueEventListener(new ValueEventListener() {
                 @Override

@@ -221,7 +221,9 @@ public class DetailActivity extends AppCompatActivity {
                         .setMessage(getString(R.string.delete_entry_dialog_message))
                         .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int which) {
-                                FirebaseStorage.getInstance().getReferenceFromUrl(mMexEntry.getImageUrl()).delete();
+                                if (mMexEntry.getImageUrl() != null && !mMexEntry.getImageUrl().isEmpty()) {
+                                    FirebaseStorage.getInstance().getReferenceFromUrl(mMexEntry.getImageUrl()).delete();
+                                }
                                 mDetailDatabaseReference.removeValue();
                                 finish();
                             }
@@ -280,6 +282,8 @@ public class DetailActivity extends AppCompatActivity {
             initializeMexEntryDetails();
         }
     }
+
+
 
     private void initializeFirebase() {
         FirebaseDatabase detailDatabase = FirebaseDatabase.getInstance();

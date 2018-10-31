@@ -1,6 +1,8 @@
 package net.tirgan.mex.ui.detail;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -13,7 +15,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.RatingBar;
@@ -27,6 +32,9 @@ import com.google.android.gms.common.GooglePlayServicesRepairableException;
 import com.google.android.gms.location.places.GeoDataClient;
 import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.PlaceBufferResponse;
+import com.google.android.gms.location.places.PlaceDetectionClient;
+import com.google.android.gms.location.places.PlaceLikelihood;
+import com.google.android.gms.location.places.PlaceLikelihoodBufferResponse;
 import com.google.android.gms.location.places.Places;
 import com.google.android.gms.location.places.ui.PlacePicker;
 import com.google.android.gms.tasks.Continuation;
@@ -47,11 +55,15 @@ import com.squareup.picasso.Target;
 import net.tirgan.mex.MyFirebaseApp;
 import net.tirgan.mex.R;
 import net.tirgan.mex.model.MexEntry;
+import net.tirgan.mex.model.MexLikelyPlaces;
+import net.tirgan.mex.searchablespinner.SearchableSpinner;
 import net.tirgan.mex.ui.main.MainActivity;
 import net.tirgan.mex.utilities.FirebaseUtils;
 import net.tirgan.mex.utilities.MiscUtils;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -64,6 +76,7 @@ public class DetailEditActivity extends AppCompatActivity {
     private static final int PLACE_PICKER_REQUEST = 1;
     private static final int RC_IMAGE_CAPTURE_MEX_ENTRY = 3;
     private static final int RC_LOCATION_MEX_ENTRY = 4;
+    private static final int RC_LOCATION_CURRENT = 5;
 
 
     private DatabaseReference mDetailDatabaseReference;
@@ -71,6 +84,7 @@ public class DetailEditActivity extends AppCompatActivity {
     private StorageReference mStorageReference;
 
     private GeoDataClient mGeoDataClient;
+    private PlaceDetectionClient mPlaceDetectionClient;
 
 
     private MexEntry mMexEntry;
@@ -95,16 +109,21 @@ public class DetailEditActivity extends AppCompatActivity {
     @BindView(R.id.detail_edit_comment_et)
     EditText mDetailEditCommentEditText;
 
+    @BindView(R.id.detail_edit_place_spinner)
+    SearchableSpinner mPlaceSpinner;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail_edit);
 
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         ButterKnife.bind(this);
 
 
         mGeoDataClient = Places.getGeoDataClient(this, null);
+        mPlaceDetectionClient = Places.getPlaceDetectionClient(this, null);
 
         // Obtain the shared Tracker instance.
         MyFirebaseApp application = (MyFirebaseApp) getApplication();
@@ -126,6 +145,8 @@ public class DetailEditActivity extends AppCompatActivity {
 
         setChangeListeners();
 
+        initializePlaceSpinner();
+
         mDetailImageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -133,6 +154,17 @@ public class DetailEditActivity extends AppCompatActivity {
             }
         });
 
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int itemId = item.getItemId();
+        switch (itemId) {
+            case android.R.id.home:
+                finish();
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     private void setChangeListeners() {
@@ -212,7 +244,9 @@ public class DetailEditActivity extends AppCompatActivity {
             //TODO: handle denied location access
             return;
         }
-        dispatchPlacesIntent(RC_LOCATION_MEX_ENTRY);
+        mPlaceSpinner.onTouch();
+
+//        dispatchPlacesIntent(RC_LOCATION_MEX_ENTRY);
 
     }
 
@@ -322,6 +356,13 @@ public class DetailEditActivity extends AppCompatActivity {
                 }
             }
 
+            case RC_LOCATION_CURRENT: {
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    initializePlaceSpinner();
+                }
+            }
+
             // other 'case' lines to check for other
             // permissions this app might request.
         }
@@ -407,5 +448,58 @@ public class DetailEditActivity extends AppCompatActivity {
             }
         });
     }
+
+    private void initializePlaceSpinner() {
+
+        if (MiscUtils.checkPermissionsAndRequest(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, RC_LOCATION_CURRENT, this)) {
+            @SuppressLint("MissingPermission") Task<PlaceLikelihoodBufferResponse> placeResult = mPlaceDetectionClient.getCurrentPlace(null);
+            final List<MexLikelyPlaces> likelyPlacesArray = new ArrayList<>();
+            placeResult.addOnCompleteListener(new OnCompleteListener<PlaceLikelihoodBufferResponse>() {
+                @Override
+                public void onComplete(@NonNull Task<PlaceLikelihoodBufferResponse> task) {
+                    PlaceLikelihoodBufferResponse likelyPlaces = task.getResult();
+                    for (PlaceLikelihood placeLikelihood : likelyPlaces) {
+
+                        String placeId = placeLikelihood.getPlace().getId();
+                        String placeName = placeLikelihood.getPlace().getName().toString();
+                        likelyPlacesArray.add(new MexLikelyPlaces(placeId, placeName));
+                    }
+                    likelyPlaces.release();
+
+                    ArrayAdapter<MexLikelyPlaces> likelyPlacesArrayAdapter = new ArrayAdapter<>(getBaseContext(), android.R.layout.simple_spinner_item, likelyPlacesArray);
+                    mPlaceSpinner.setAdapter(likelyPlacesArrayAdapter);
+
+                    mPlaceSpinner.setPositiveButton(getString(R.string.find_on_map), new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dispatchPlacesIntent(RC_LOCATION_MEX_ENTRY);
+                        }
+                    });
+                    mPlaceSpinner.setNegativeButton(getString(R.string.close), new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+
+                        }
+                    });
+                    mPlaceSpinner.setTitle(getString(R.string.detail_pick_venue));
+                    mPlaceSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                        @Override
+                        public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                            MexLikelyPlaces mexLikelyPlaces = (MexLikelyPlaces) parent.getItemAtPosition(position);
+                            mMexEntry.setPlaceId(mexLikelyPlaces.getPlaceId());
+                            mDetailPickVenueEditText.setText(mexLikelyPlaces.getPlaceName());
+                            mDetailDatabaseReference.setValue(mMexEntry);
+                        }
+
+                        @Override
+                        public void onNothingSelected(AdapterView<?> parent) {
+
+                        }
+                    });
+                }
+            });
+        }
+    }
+
 
 }

@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".ui.detail.DetailEditActivity">
 
     <LinearLayout
@@ -75,6 +76,14 @@
                 android:onClick="onUpdateLocationClick" />
 
         </android.support.design.widget.TextInputLayout>
+
+
+        <net.tirgan.mex.searchablespinner.SearchableSpinner
+            android:id="@+id/detail_edit_place_spinner"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:visibility="invisible"
+            app:hintText="@string/detail_pick_venue"/>
 
         <TextView
             android:layout_width="wrap_content"
