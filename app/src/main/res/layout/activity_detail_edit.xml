@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".ui.detail.DetailEditActivity">
 
     <LinearLayout
@@ -13,12 +13,24 @@
         android:orientation="vertical"
         android:padding="16dp">
 
-        <de.hdodenhof.circleimageview.CircleImageView
-            android:id="@+id/detail_edit_iv"
+        <FrameLayout
             android:layout_width="96dp"
             android:layout_height="96dp"
             android:layout_marginTop="16dp"
-            tools:src="@drawable/noodle" />
+            >
+
+            <de.hdodenhof.circleimageview.CircleImageView
+                android:id="@+id/detail_edit_iv"
+                android:layout_width="96dp"
+                android:layout_height="96dp"
+                tools:src="@drawable/noodle" />
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom|end"
+                android:src="@drawable/camera" />
+        </FrameLayout>
 
         <RatingBar
             android:id="@+id/detail_rb"
@@ -57,40 +69,52 @@
 
         </android.support.design.widget.TextInputLayout>
 
-
-        <android.support.design.widget.TextInputLayout
-            android:id="@+id/detail_pick_venue_til"
+        <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:focusable="false">
+            android:layout_height="wrap_content">
 
-            <android.support.design.widget.TextInputEditText
-                android:id="@+id/detail_pick_venue_et"
+            <android.support.design.widget.TextInputLayout
+                android:id="@+id/detail_pick_venue_til"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:ems="6"
-                android:focusable="false"
-                android:hint="@string/detail_pick_venue"
-                android:inputType="text"
-                android:onClick="onUpdateLocationClick" />
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:focusable="false">
 
-        </android.support.design.widget.TextInputLayout>
+                <android.support.design.widget.TextInputEditText
+                    android:id="@+id/detail_pick_venue_et"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:editable="false"
+                    android:ems="6"
+                    android:focusable="false"
+                    android:hint="@string/detail_pick_venue"
+                    android:inputType="text"
+                    android:onClick="onUpdateLocationClick" />
 
+            </android.support.design.widget.TextInputLayout>
+
+            <ProgressBar
+                android:id="@+id/detail_pick_venue_pb"
+                android:layout_width="wrap_content"
+                android:layout_height="20dp"
+                android:layout_gravity="end|center"
+                android:visibility="gone" />
+
+        </FrameLayout>
 
         <net.tirgan.mex.searchablespinner.SearchableSpinner
             android:id="@+id/detail_edit_place_spinner"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:visibility="invisible"
-            app:hintText="@string/detail_pick_venue"/>
+            app:hintText="@string/detail_pick_venue" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="start"
             android:layout_marginTop="16dp"
-            android:text="@string/detail_enter_comment"/>
+            android:text="@string/detail_enter_comment" />
 
         <EditText
             android:id="@+id/detail_edit_comment_et"
@@ -100,8 +124,7 @@
             android:gravity="start|top"
             android:lines="4"
             android:maxLines="8"
-            android:padding="8dp"
-            />
+            android:padding="8dp" />
 
     </LinearLayout>
 </ScrollView>

@@ -47,6 +47,7 @@ public class MexAdapter extends RecyclerView.Adapter<MexAdapter.MexAdapterViewHo
 
     private final Context mContext;
     private final DatabaseReference mEntriesDatabaseReference;
+    private final GeoDataClient mGeoDataClient;
 
     private List<Pair<MexEntry, String>> mMexEntryPairs;
     private List<Pair<MexEntry, String>> mMexEntryPairsFiltered;
@@ -70,6 +71,7 @@ public class MexAdapter extends RecyclerView.Adapter<MexAdapter.MexAdapterViewHo
         mFilterByMinRating = 0;
         mSortBy = 1;
 
+        mGeoDataClient = Places.getGeoDataClient(mContext, null);
 
         mEntriesDatabaseReference.addValueEventListener(new ValueEventListener() {
             @Override
@@ -129,8 +131,7 @@ public class MexAdapter extends RecyclerView.Adapter<MexAdapter.MexAdapterViewHo
 //        holder.mMexListItemCardView.setCardBackgroundColor(randomColorWithTransparency);
 
         if (mexEntryPairs.first.getPlaceId() != null && !mexEntryPairs.first.getPlaceId().isEmpty()) {
-            GeoDataClient geoDataClient = Places.getGeoDataClient(mContext, null);
-            geoDataClient.getPlaceById(mexEntryPairs.first.getPlaceId()).addOnCompleteListener(new OnCompleteListener<PlaceBufferResponse>() {
+            mGeoDataClient.getPlaceById(mexEntryPairs.first.getPlaceId()).addOnCompleteListener(new OnCompleteListener<PlaceBufferResponse>() {
                 @Override
                 public void onComplete(@NonNull Task<PlaceBufferResponse> task) {
                     if (task.isSuccessful()) {
@@ -141,6 +142,8 @@ public class MexAdapter extends RecyclerView.Adapter<MexAdapter.MexAdapterViewHo
                     }
                 }
             });
+        } else {
+            holder.mMexEntryVenueTextView.setText("");
         }
 
     }

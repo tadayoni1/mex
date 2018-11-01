@@ -279,10 +279,9 @@ public class DetailActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == ACTIVITY_FOR_RESULT_DETAIL_EDIT) {
-            initializeMexEntryDetails();
+//            initializeMexEntryDetails();
         }
     }
-
 
 
     private void initializeFirebase() {
@@ -296,71 +295,74 @@ public class DetailActivity extends AppCompatActivity {
     }
 
     private void initializeMexEntryDetails() {
-        mDetailDatabaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
+        mDetailDatabaseReference.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot aDataSnapshot) {
                 mMexEntry = aDataSnapshot.getValue(MexEntry.class);
-                if (mMexEntry.getImageUrl() != null && !mMexEntry.getImageUrl().isEmpty()) {
-                    mIsDefaultImageLoaded = false;
-                    if (MiscUtils.LOLLIPOP_AND_HIGHER && getResources().getBoolean(R.bool.is_animation_enabled)) {
-                        mDetailImageView.setTransitionName(getString(R.string.shared_element_mex_entry_image_view));
+                if (mMexEntry != null) {
+                    if (mMexEntry.getImageUrl() != null && !mMexEntry.getImageUrl().isEmpty()) {
+                        mIsDefaultImageLoaded = false;
+                        if (MiscUtils.LOLLIPOP_AND_HIGHER && getResources().getBoolean(R.bool.is_animation_enabled)) {
+                            mDetailImageView.setTransitionName(getString(R.string.shared_element_mex_entry_image_view));
+                        }
+                        final Target target = new Target() {
+                            @Override
+                            public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
+                                mDetailImageView.setImageBitmap(bitmap);
+                                if (MiscUtils.LOLLIPOP_AND_HIGHER && getResources().getBoolean(R.bool.is_animation_enabled)) {
+                                    supportStartPostponedEnterTransition();
+                                }
+                            }
+
+                            @Override
+                            public void onBitmapFailed(Exception e, Drawable errorDrawable) {
+                                if (MiscUtils.LOLLIPOP_AND_HIGHER && getResources().getBoolean(R.bool.is_animation_enabled)) {
+                                    supportStartPostponedEnterTransition();
+                                }
+                            }
+
+                            @Override
+                            public void onPrepareLoad(Drawable placeHolderDrawable) {
+
+                            }
+                        };
+                        Picasso.get().load(mMexEntry.getImageUrl()).into(target);
+                        mDetailImageView.setTag(target);
+                    } else {
+                        mToolbar.setBackgroundColor(getResources().getColor(R.color.colorPrimaryWithTransparency));
+                        mIsDefaultImageLoaded = true;
+                        Picasso.get()
+                                .load(FirebaseUtils.MEX_ENTRY_DEFAULT_IMAGE_DOWNLOAD_URL)
+                                .into(mDetailImageView);
                     }
-                    final Target target = new Target() {
-                        @Override
-                        public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
-                            mDetailImageView.setImageBitmap(bitmap);
-                            if (MiscUtils.LOLLIPOP_AND_HIGHER && getResources().getBoolean(R.bool.is_animation_enabled)) {
-                                supportStartPostponedEnterTransition();
+                    mDetailEditText.setText(mMexEntry.getName());
+                    final String formattedDate = MiscUtils.getFormattedDate(mMexEntry.getDate());
+                    if (mMexEntry.getPlaceId() != null && !mMexEntry.getPlaceId().isEmpty()) {
+                        mGeoDataClient.getPlaceById(mMexEntry.getPlaceId()).addOnCompleteListener(new OnCompleteListener<PlaceBufferResponse>() {
+                            @Override
+                            public void onComplete(@NonNull Task<PlaceBufferResponse> task) {
+                                if (task.isSuccessful()) {
+                                    PlaceBufferResponse places = task.getResult();
+                                    Place myPlace = places.get(0);
+                                    mVenueDateTextView.setText(getString(R.string.format_venue_date, formattedDate, myPlace.getName()));
+                                    places.release();
+                                } else {
+                                    mVenueDateTextView.setText(formattedDate);
+                                    Log.e(TAG, "Place not found.");
+                                }
                             }
-                        }
-
-                        @Override
-                        public void onBitmapFailed(Exception e, Drawable errorDrawable) {
-                            if (MiscUtils.LOLLIPOP_AND_HIGHER && getResources().getBoolean(R.bool.is_animation_enabled)) {
-                                supportStartPostponedEnterTransition();
-                            }
-                        }
-
-                        @Override
-                        public void onPrepareLoad(Drawable placeHolderDrawable) {
-
-                        }
-                    };
-                    Picasso.get().load(mMexEntry.getImageUrl()).into(target);
-                    mDetailImageView.setTag(target);
-                } else {
-                    mToolbar.setBackgroundColor(getResources().getColor(R.color.colorPrimaryWithTransparency));
-                    mIsDefaultImageLoaded = true;
-                    Picasso.get()
-                            .load(FirebaseUtils.MEX_ENTRY_DEFAULT_IMAGE_DOWNLOAD_URL)
-                            .into(mDetailImageView);
-                }
-                mDetailEditText.setText(mMexEntry.getName());
-                final String formattedDate = MiscUtils.getFormattedDate(mMexEntry.getDate());
-                if (mMexEntry.getPlaceId() != null && !mMexEntry.getPlaceId().isEmpty()) {
-                    mGeoDataClient.getPlaceById(mMexEntry.getPlaceId()).addOnCompleteListener(new OnCompleteListener<PlaceBufferResponse>() {
-                        @Override
-                        public void onComplete(@NonNull Task<PlaceBufferResponse> task) {
-                            if (task.isSuccessful()) {
-                                PlaceBufferResponse places = task.getResult();
-                                Place myPlace = places.get(0);
-                                mVenueDateTextView.setText(getString(R.string.format_venue_date, formattedDate, myPlace.getName()));
-                                places.release();
-                            } else {
-                                mVenueDateTextView.setText(formattedDate);
-                                Log.e(TAG, "Place not found.");
-                            }
-                        }
-                    });
-                } else {
-                    mVenueDateTextView.setText(formattedDate);
-                }
-                mMexPriceTextView.setText(getString(R.string.format_price, String.valueOf(mMexEntry.getPrice())));
-                mDetailRatingBar.setRating(mMexEntry.getRating());
-                if (mMexEntry.getComment() == null || mMexEntry.getComment().isEmpty()) {
-                    mDetailCommentCardView.setVisibility(View.GONE);
-                } else {
-                    mDetailCommentTextView.setText(mMexEntry.getComment());
+                        });
+                    } else {
+                        mVenueDateTextView.setText(formattedDate);
+                    }
+                    mMexPriceTextView.setText(getString(R.string.format_price, String.valueOf(mMexEntry.getPrice())));
+                    mDetailRatingBar.setRating(mMexEntry.getRating());
+                    if (mMexEntry.getComment() == null || mMexEntry.getComment().isEmpty()) {
+                        mDetailCommentCardView.setVisibility(View.GONE);
+                    } else {
+                        mDetailCommentCardView.setVisibility(View.VISIBLE);
+                        mDetailCommentTextView.setText(mMexEntry.getComment());
+                    }
                 }
             }
 
