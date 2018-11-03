@@ -11,16 +11,19 @@ import android.os.Build;
 import android.provider.MediaStore;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.FileProvider;
 import android.support.v4.util.Pair;
 import android.util.TypedValue;
 
 import com.esafirm.imagepicker.model.Image;
 
+import net.tirgan.mex.R;
 import net.tirgan.mex.model.MexEntry;
 import net.tirgan.mex.ui.main.MexAdapter;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Collections;
@@ -33,12 +36,34 @@ public class MiscUtils {
 
     public final static boolean LOLLIPOP_AND_HIGHER = android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP;
 
-    public static Uri getImageUri(Context aContext, Bitmap aBitmap) {
+    public static Uri saveImageAndGetUri(Context aContext, Bitmap aBitmap) {
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
         aBitmap.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
         String path = MediaStore.Images.Media.insertImage(aContext.getContentResolver(), aBitmap, null, null);
         return Uri.parse(path);
     }
+
+    public static Uri getImageUri(Context aContext, Bitmap aBitmap) {
+        saveBitmapToCache(aContext, aBitmap);
+        File imagePath = new File(aContext.getCacheDir(), aContext.getString(R.string.default_image_folder_in_cache));
+        File file = new File(imagePath, aContext.getString(R.string.default_image_name_in_cache));
+        Uri uri = FileProvider.getUriForFile(aContext, "net.tirgan.mex.fileprovider", file);
+        return uri;
+    }
+
+    private static void saveBitmapToCache(Context aContext, Bitmap aBitmap) {
+        try {
+            File cachePath = new File(aContext.getCacheDir(), aContext.getString(R.string.default_image_folder_in_cache));
+            cachePath.mkdirs();
+            FileOutputStream stream = new FileOutputStream(cachePath + "/" + aContext.getString(R.string.default_image_name_in_cache)); // overwrites this image every time
+            aBitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+            stream.close();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
 
     public static Uri getImageUri(Context aContext, Image aImage) {
         File file = new File(aImage.getPath());
@@ -89,7 +114,7 @@ public class MiscUtils {
             public int compare(Pair<MexEntry, String> aMexEntryPair1, Pair<MexEntry, String> aMexEntryPair2) {
                 switch (aSortBy) {
                     case MexAdapter.SORT_BY_RATING:
-                        return (int) (aMexEntryPair2.first.getRating() - aMexEntryPair1.first.getRating());
+                        return compareFloatsForSorting(aMexEntryPair2.first.getRating(), aMexEntryPair1.first.getRating());
                     case MexAdapter.SORT_BY_NAME:
                         return aMexEntryPair1.first.getName().compareTo(aMexEntryPair2.first.getName());
                     case MexAdapter.SORT_BY_ENTRY_DATE:
@@ -100,6 +125,17 @@ public class MiscUtils {
         });
 
         return aMexEntryPairs;
+    }
+
+    private static int compareFloatsForSorting(float aF1, float aF2) {
+        if (aF1 == aF2) {
+            return 0;
+        }
+        if (aF1 > aF2) {
+            return 1;
+        } else {
+            return -1;
+        }
     }
 
     public static float getFloat(int aR, Context aContext) {
@@ -130,4 +166,6 @@ public class MiscUtils {
         }
         return gps_enabled || network_enabled;
     }
+
+
 }

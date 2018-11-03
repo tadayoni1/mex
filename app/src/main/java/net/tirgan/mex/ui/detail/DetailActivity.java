@@ -3,9 +3,11 @@ package net.tirgan.mex.ui.detail;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -62,6 +64,7 @@ public class DetailActivity extends AppCompatActivity {
     public static final String INTENT_EXTRA_DETAIL_FIREBASE_DATABASE_KEY = "intent-extra-detail-firebase-database-key";
 
     private static final int RC_IMAGE_CAPTURE_MEX_ENTRY = 3;
+    private static final int RC_SHARE_EXTERNAL_STORAGE = 4;
 
     private static final String INSTANCE_STATE_MEX_ENTRY = "instance-state-mex-entry";
 
@@ -242,28 +245,7 @@ public class DetailActivity extends AppCompatActivity {
                 break;
             case SettingsUtil.MENU_ITEM_SHARE:
                 AnalyticsUtils.sendScreenImageName(mTracker, DetailActivity.class.getSimpleName() + "-share");
-                Picasso.get()
-                        .load(mMexEntry.getImageUrl())
-                        .into(new Target() {
-                            @Override
-                            public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
-                                Intent shareIntent = new Intent();
-                                shareIntent.setAction(Intent.ACTION_SEND);
-                                shareIntent.putExtra(Intent.EXTRA_STREAM, MiscUtils.getImageUri(getApplicationContext(), bitmap));
-                                shareIntent.setType("image/jpeg");
-                                startActivity(Intent.createChooser(shareIntent, getString(R.string.send_to)));
-                            }
-
-                            @Override
-                            public void onBitmapFailed(Exception e, Drawable errorDrawable) {
-                                Toast.makeText(getApplication(), getString(R.string.failed_to_download), Toast.LENGTH_SHORT).show();
-                            }
-
-                            @Override
-                            public void onPrepareLoad(Drawable placeHolderDrawable) {
-
-                            }
-                        });
+                share();
                 break;
             case SettingsUtil.MENU_ITEM_EDIT:
                 Intent intentDetailEdit = new Intent(DetailActivity.this, DetailEditActivity.class);
@@ -273,6 +255,53 @@ public class DetailActivity extends AppCompatActivity {
 
         }
         return true;
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch (requestCode) {
+            case RC_SHARE_EXTERNAL_STORAGE:
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+
+                    share();
+                } else {
+
+
+                }
+                break;
+        }
+    }
+
+    private void share() {
+        if (mMexEntry.getImageUrl() != null && !mMexEntry.getImageUrl().isEmpty()) {
+            Picasso.get()
+                    .load(mMexEntry.getImageUrl())
+                    .into(new Target() {
+                        @Override
+                        public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
+                            Uri uri = MiscUtils.getImageUri(getApplicationContext(), bitmap);
+                            Intent shareIntent = new Intent();
+                            shareIntent.setAction(Intent.ACTION_SEND);
+                            shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                            shareIntent.setDataAndType(uri, getContentResolver().getType(uri));
+                            shareIntent.putExtra(Intent.EXTRA_STREAM, uri);
+                            startActivity(Intent.createChooser(shareIntent, getString(R.string.send_to)));
+                        }
+
+                        @Override
+                        public void onBitmapFailed(Exception e, Drawable errorDrawable) {
+                            Toast.makeText(getApplication(), getString(R.string.failed_to_download), Toast.LENGTH_SHORT).show();
+                        }
+
+                        @Override
+                        public void onPrepareLoad(Drawable placeHolderDrawable) {
+
+                        }
+                    });
+        }
     }
 
     @Override

@@ -11,7 +11,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -64,6 +63,7 @@ import net.tirgan.mex.searchablespinner.SearchableSpinner;
 import net.tirgan.mex.ui.main.MainActivity;
 import net.tirgan.mex.utilities.FirebaseUtils;
 import net.tirgan.mex.utilities.MiscUtils;
+import net.tirgan.mex.utilities.PlacesUtil;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -89,12 +89,13 @@ public class DetailEditActivity extends AppCompatActivity implements GoogleApiCl
 
     private GeoDataClient mGeoDataClient;
     private PlaceDetectionClient mPlaceDetectionClient;
-    private GoogleApiClient mGoogleApiClient;
 
 
     private MexEntry mMexEntry;
     private String mKey;
     private Tracker mTracker;
+
+    private boolean isLocationAvailable;
 
     @BindView(R.id.detail_edit_iv)
     ImageView mDetailImageView;
@@ -158,7 +159,7 @@ public class DetailEditActivity extends AppCompatActivity implements GoogleApiCl
         mDetailImageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                dispatchCameraIntent(RC_IMAGE_CAPTURE_MEX_ENTRY);
+                dispatchCameraIntent();
             }
         });
 
@@ -247,19 +248,15 @@ public class DetailEditActivity extends AppCompatActivity implements GoogleApiCl
     }
 
     public void onUpdateLocationClick(View view) {
-        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED) {
-            //TODO: handle denied location access
-            return;
+        if (isLocationAvailable) {
+            mPlaceSpinner.onTouch();
+        } else {
+            dispatchPlacesIntent();
         }
-        mPlaceSpinner.onTouch();
-
-//        dispatchPlacesIntent(RC_LOCATION_MEX_ENTRY);
-
     }
 
-    private void dispatchPlacesIntent(int aPermissionRequestId) {
-        if (MiscUtils.checkPermissionsAndRequest(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, aPermissionRequestId, this)) {
+    private void dispatchPlacesIntent() {
+        if (MiscUtils.checkPermissionsAndRequest(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, RC_LOCATION_MEX_ENTRY, this)) {
             try {
                 // Start a new Activity for the Place Picker API, this will trigger {@code #onActivityResult}
                 // when a place is selected or with the user cancels.
@@ -333,8 +330,8 @@ public class DetailEditActivity extends AppCompatActivity implements GoogleApiCl
 
     }
 
-    private void dispatchCameraIntent(int aPermissionRequestId) {
-        if (MiscUtils.checkPermissionsAndRequest(new String[]{Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE}, aPermissionRequestId, this)) {
+    private void dispatchCameraIntent() {
+        if (MiscUtils.checkPermissionsAndRequest(new String[]{Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE}, RC_IMAGE_CAPTURE_MEX_ENTRY, this)) {
             ImagePicker.create(this) // Activity or Fragment
                     .returnMode(ReturnMode.ALL)
                     .single()
@@ -345,31 +342,30 @@ public class DetailEditActivity extends AppCompatActivity implements GoogleApiCl
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         switch (requestCode) {
-            case RC_IMAGE_CAPTURE_MEX_ENTRY: {
+            case RC_IMAGE_CAPTURE_MEX_ENTRY:
                 // If request is cancelled, the result arrays are empty.
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    // permission was granted, yay! Do the
-                    // contacts-related task you need to do.
-                    dispatchCameraIntent(RC_IMAGE_CAPTURE_MEX_ENTRY);
+
+
+                    dispatchCameraIntent();
                 } else {
-                    // permission denied, boo! Disable the
-                    // functionality that depends on this permission.
+
+
                 }
-            }
-            case RC_LOCATION_MEX_ENTRY: {
+                break;
+            case RC_LOCATION_MEX_ENTRY:
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    dispatchPlacesIntent(RC_LOCATION_MEX_ENTRY);
+                    dispatchPlacesIntent();
                 }
-            }
-
-            case RC_LOCATION_CURRENT: {
+                break;
+            case RC_LOCATION_CURRENT:
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     initializePlaceSpinner();
                 }
-            }
+                break;
 
             // other 'case' lines to check for other
             // permissions this app might request.
@@ -471,103 +467,57 @@ public class DetailEditActivity extends AppCompatActivity implements GoogleApiCl
                 public void onComplete(@NonNull Task<PlaceLikelihoodBufferResponse> task) {
                     mDetailPickVenueEditText.setText("");
                     if (task.isSuccessful() && task.getResult() != null) {
+                        isLocationAvailable = true;
                         PlaceLikelihoodBufferResponse likelyPlaces = task.getResult();
                         for (PlaceLikelihood placeLikelihood : likelyPlaces) {
-
-                            String placeId = placeLikelihood.getPlace().getId();
-                            String placeName = placeLikelihood.getPlace().getName().toString();
-                            likelyPlacesArray.add(new MexLikelyPlaces(placeId, placeName));
+                            if (PlacesUtil.isFoodPlace(placeLikelihood.getPlace().getPlaceTypes())) {
+                                String placeId = placeLikelihood.getPlace().getId();
+                                String placeName = placeLikelihood.getPlace().getName().toString();
+                                likelyPlacesArray.add(new MexLikelyPlaces(placeId, placeName));
+                            }
                         }
                         likelyPlaces.release();
 
-                        ArrayAdapter<MexLikelyPlaces> likelyPlacesArrayAdapter = new ArrayAdapter<>(getBaseContext(), android.R.layout.simple_spinner_item, likelyPlacesArray);
-                        mPlaceSpinner.setAdapter(likelyPlacesArrayAdapter);
+                        if (likelyPlacesArray.size() > 0) {
+                            ArrayAdapter<MexLikelyPlaces> likelyPlacesArrayAdapter = new ArrayAdapter<>(getBaseContext(), android.R.layout.simple_spinner_item, likelyPlacesArray);
+                            mPlaceSpinner.setAdapter(likelyPlacesArrayAdapter);
 
-                        mPlaceSpinner.setPositiveButton(getString(R.string.find_on_map), new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                dispatchPlacesIntent(RC_LOCATION_MEX_ENTRY);
-                            }
-                        });
-                        mPlaceSpinner.setNegativeButton(getString(R.string.close), new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
+                            mPlaceSpinner.setPositiveButton(getString(R.string.find_on_map), new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    dispatchPlacesIntent();
+                                }
+                            });
+                            mPlaceSpinner.setNegativeButton(getString(R.string.close), new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
 
-                            }
-                        });
-                        mPlaceSpinner.setTitle(getString(R.string.detail_pick_venue));
-                        mPlaceSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                            @Override
-                            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                                MexLikelyPlaces mexLikelyPlaces = (MexLikelyPlaces) parent.getItemAtPosition(position);
-                                mMexEntry.setPlaceId(mexLikelyPlaces.getPlaceId());
-                                mDetailPickVenueEditText.setText(mexLikelyPlaces.getPlaceName());
-                                mDetailDatabaseReference.setValue(mMexEntry);
-                            }
+                                }
+                            });
+                            mPlaceSpinner.setTitle(getString(R.string.detail_pick_venue));
+                            mPlaceSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                                @Override
+                                public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                                    MexLikelyPlaces mexLikelyPlaces = (MexLikelyPlaces) parent.getItemAtPosition(position);
+                                    mMexEntry.setPlaceId(mexLikelyPlaces.getPlaceId());
+                                    mDetailPickVenueEditText.setText(mexLikelyPlaces.getPlaceName());
+                                    mDetailDatabaseReference.setValue(mMexEntry);
+                                }
 
-                            @Override
-                            public void onNothingSelected(AdapterView<?> parent) {
+                                @Override
+                                public void onNothingSelected(AdapterView<?> parent) {
 
-                            }
-                        });
+                                }
+                            });
+                        } else {
+                            isLocationAvailable = false;
+                        }
+                    } else {
+                        isLocationAvailable = false;
                     }
                     mDetailPickVenueProgressBar.setVisibility(View.GONE);
                 }
             });
-//            mDetailPickVenueProgressBar.setVisibility(View.VISIBLE);
-//            mDetailPickVenueEditText.setText(getString(R.string.loading_nearby_places));
-//            mGoogleApiClient = new GoogleApiClient.Builder(this)
-//                    .addConnectionCallbacks(this)
-//                    .addOnConnectionFailedListener(this)
-//                    .addApi(Places.PLACE_DETECTION_API).build();
-//            @SuppressLint("MissingPermission") PendingResult<PlaceLikelihoodBuffer> result = Places.PlaceDetectionApi
-//                    .getCurrentPlace(mGoogleApiClient, null);
-//            result.setResultCallback(new ResultCallback<PlaceLikelihoodBuffer>() {
-//                @Override
-//                public void onResult(PlaceLikelihoodBuffer likelyPlaces) {
-//                    for (PlaceLikelihood placeLikelihood : likelyPlaces) {
-//                        String placeId = placeLikelihood.getPlace().getId();
-//                        String placeName = placeLikelihood.getPlace().getName().toString();
-//                        likelyPlacesArray.add(new MexLikelyPlaces(placeId, placeName));
-//                    }
-//                    likelyPlaces.release();
-//
-//                    ArrayAdapter<MexLikelyPlaces> likelyPlacesArrayAdapter = new ArrayAdapter<>(getBaseContext(), android.R.layout.simple_spinner_item, likelyPlacesArray);
-//                    mPlaceSpinner.setAdapter(likelyPlacesArrayAdapter);
-//
-//                    mPlaceSpinner.setPositiveButton(getString(R.string.find_on_map), new DialogInterface.OnClickListener() {
-//                        @Override
-//                        public void onClick(DialogInterface dialog, int which) {
-//                            dispatchPlacesIntent(RC_LOCATION_MEX_ENTRY);
-//                        }
-//                    });
-//                    mPlaceSpinner.setNegativeButton(getString(R.string.close), new DialogInterface.OnClickListener() {
-//                        @Override
-//                        public void onClick(DialogInterface dialog, int which) {
-//
-//                        }
-//                    });
-//                    mPlaceSpinner.setTitle(getString(R.string.detail_pick_venue));
-//                    mPlaceSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-//                        @Override
-//                        public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-//                            MexLikelyPlaces mexLikelyPlaces = (MexLikelyPlaces) parent.getItemAtPosition(position);
-//                            mMexEntry.setPlaceId(mexLikelyPlaces.getPlaceId());
-//                            mDetailPickVenueEditText.setText(mexLikelyPlaces.getPlaceName());
-//                            mDetailDatabaseReference.setValue(mMexEntry);
-//                        }
-//
-//                        @Override
-//                        public void onNothingSelected(AdapterView<?> parent) {
-//
-//                        }
-//                    });
-//                    if(mPlaceSpinner.getChildCount() ==0) {
-//                        mDetailPickVenueEditText.setText(getString(R.string.detail_pick_venue));
-//                    }
-//                    mDetailPickVenueProgressBar.setVisibility(View.GONE);
-//                }
-//            });
         }
     }
 

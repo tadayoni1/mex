@@ -21,8 +21,11 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
+import android.widget.Toast;
 
 import com.firebase.ui.auth.AuthUI;
+import com.firebase.ui.auth.ErrorCodes;
+import com.firebase.ui.auth.IdpResponse;
 import com.google.android.gms.analytics.Tracker;
 import com.google.android.gms.location.places.GeoDataClient;
 import com.google.android.gms.location.places.Place;
@@ -180,6 +183,7 @@ public class MainActivity
                     startActivityForResult(
                             AuthUI.getInstance()
                                     .createSignInIntentBuilder()
+                                    .setLogo(R.drawable.logo_round)
                                     .setIsSmartLockEnabled(false)
                                     .setAvailableProviders(Arrays.asList(
                                             new AuthUI.IdpConfig.GoogleBuilder().build(),
@@ -268,7 +272,11 @@ public class MainActivity
         super.onActivityResult(requestCode, resultCode, data);
         switch (requestCode) {
             case RC_SIGN_IN:
+                IdpResponse response = IdpResponse.fromResultIntent(data);
                 if (resultCode == RESULT_CANCELED) {
+                    if(response.getError().getErrorCode() == ErrorCodes.NO_NETWORK) {
+                        Toast.makeText(this, getString(R.string.no_internet_connection), Toast.LENGTH_SHORT).show();
+                    }
                     finish();
                 } else if (resultCode == RESULT_OK) {
                     initializeActivity(null);

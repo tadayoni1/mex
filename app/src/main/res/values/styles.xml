@@ -28,5 +28,21 @@
 
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
 
+    <style name="FirebaseTheme" parent="FirebaseUI">
+        <!-- Required for sign-in flow styling -->
+        <item name="android:windowBackground">@color/colorPrimary</item>
+    </style>
+
+    <style name="GreenTheme" parent="FirebaseUI">
+        <!-- Required for sign-in flow styling -->
+        <item name="colorPrimary">@color/md_green_500</item>
+        <item name="colorPrimaryDark">@color/md_green_700</item>
+        <item name="colorAccent">@color/md_purple_700</item>
+
+        <item name="colorControlNormal">@color/md_green_500</item>
+        <item name="colorControlActivated">@color/md_lime_700</item>
+        <item name="colorControlHighlight">@color/md_green_200</item>
+        <item name="android:windowBackground">@color/md_green_50</item>
+    </style>
 
 </resources>
