@@ -274,7 +274,7 @@ public class MainActivity
             case RC_SIGN_IN:
                 IdpResponse response = IdpResponse.fromResultIntent(data);
                 if (resultCode == RESULT_CANCELED) {
-                    if(response.getError().getErrorCode() == ErrorCodes.NO_NETWORK) {
+                    if (response != null && response.getError() != null && response.getError().getErrorCode() == ErrorCodes.NO_NETWORK) {
                         Toast.makeText(this, getString(R.string.no_internet_connection), Toast.LENGTH_SHORT).show();
                     }
                     finish();
