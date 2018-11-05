@@ -187,6 +187,7 @@ public class MainActivity
                                     .setIsSmartLockEnabled(false)
                                     .setAvailableProviders(Arrays.asList(
                                             new AuthUI.IdpConfig.GoogleBuilder().build(),
+                                            new AuthUI.IdpConfig.FacebookBuilder().build(),
                                             new AuthUI.IdpConfig.EmailBuilder().build()
                                     ))
                                     .build(),
