@@ -7,6 +7,11 @@
         android:title="@string/title_home" />
 
     <item
+        android:id="@+id/navigation_likely_places"
+        android:icon="@drawable/google_nearby"
+        android:title="@string/title_home" />
+
+    <item
         android:id="@+id/navigation_maps"
         android:icon="@drawable/ic_google_maps"
         android:title="@string/title_google_map" />

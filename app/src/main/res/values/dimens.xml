@@ -13,5 +13,6 @@ http://developer.android.com/guide/topics/appwidgets/index.html#CreatingLayout
     <dimen name="fab_margin">24dp</dimen>
     <dimen name="fab_elevation">6dp</dimen>
     <dimen name="fab_press_translation_z">6dp</dimen>
-    <item name="camera_default_zoom" type="dimen" format="float">15.0</item>
+    <item name="camera_default_zoom" format="float" type="dimen">15.0</item>
+    <dimen name="text_margin">16dp</dimen>
 </resources>

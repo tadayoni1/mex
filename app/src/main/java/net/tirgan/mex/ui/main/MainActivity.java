@@ -83,6 +83,7 @@ public class MainActivity
 
     private FragmentManager mFragmentManager;
     private ListFragment mListFragment;
+    private MexLikelyPlacesFragment mMexLikelyPlacesFragment;
 
     @BindView(R.id.navigation)
     BottomNavigationView mBottomNavigationView;
@@ -104,6 +105,9 @@ public class MainActivity
         @Override
         public boolean onNavigationItemSelected(@NonNull MenuItem item) {
             switch (item.getItemId()) {
+                case R.id.navigation_likely_places:
+                    loadLikelyPlacesFragment();
+                    return true;
                 case R.id.navigation_home:
                     loadListFragment();
                     return true;
@@ -214,6 +218,7 @@ public class MainActivity
         mFragmentManager = getSupportFragmentManager();
 
         mListFragment = new ListFragment();
+        mMexLikelyPlacesFragment = new MexLikelyPlacesFragment();
 
         LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
 
@@ -254,6 +259,13 @@ public class MainActivity
     private void loadListFragment() {
         mFragmentManager.beginTransaction()
                 .replace(R.id.list_container, mListFragment)
+                .commit();
+        AnalyticsUtils.sendScreenImageName(mTracker, ListFragment.class.getSimpleName(), LOG_TAG);
+    }
+
+    private void loadLikelyPlacesFragment() {
+        mFragmentManager.beginTransaction()
+                .replace(R.id.list_container, mMexLikelyPlacesFragment)
                 .commit();
         AnalyticsUtils.sendScreenImageName(mTracker, ListFragment.class.getSimpleName(), LOG_TAG);
     }
