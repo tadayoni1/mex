@@ -9,4 +9,6 @@
 /captures
 .externalNativeBuild
 app/google-services.json
+app/android.jks
 app/release/*
+signing.properties
