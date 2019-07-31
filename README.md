@@ -1,6 +1,9 @@
 # Mex
 
-Sample project to practice implementing Firebase features
+When you are at a restaurant this app lets you take a picture of the food you ordered save it to cloud. You may add some meta data to your picture like the name, price, restaurant name and your comment. 
+This app uses your location to find at which restaurant you are. 
+
+The purpose of this project is to practice implementing Firebase features
 * Authentication
 * Realtime database
 * Storage
